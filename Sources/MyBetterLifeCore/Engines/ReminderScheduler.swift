@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 #if canImport(UserNotifications)
-import UserNotifications
+@preconcurrency import UserNotifications
 #endif
 #if os(macOS)
 import AppKit
