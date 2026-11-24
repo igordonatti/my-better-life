@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Apple macOS Sequoia Light Mode — exact match to AppTheme.swift & Things 3 */
+    --mbl-canvas: #ffffff;
+    --mbl-surface: #ffffff;
+    --mbl-surface-secondary: #f5f5f7;
+    --mbl-sidebar: rgba(245, 245, 247, 0.82);
+    --mbl-fill: rgba(118, 118, 128, 0.11);
+    --mbl-fill-strong: rgba(118, 118, 128, 0.18);
+    --mbl-hairline: rgba(0, 0, 0, 0.09);
+    --mbl-hairline-soft: rgba(0, 0, 0, 0.045);
+    --mbl-label: #1d1d1f;
+    --mbl-label-secondary: #6e6e73;
+    --mbl-label-tertiary: #86868b;
+    --mbl-accent: #007aff;
+    --mbl-accent-hover: #0066d6;
+    --mbl-toolbar-bg: rgba(255, 255, 255, 0.78);
+    color-scheme: light;
+  }
+
+  .dark {
+    /* Apple macOS Sequoia Dark Mode */
+    --mbl-canvas: #1c1c1e;
+    --mbl-surface: #242426;
+    --mbl-surface-secondary: #141416;
+    --mbl-sidebar: rgba(34, 34, 37, 0.82);
+    --mbl-fill: rgba(118, 118, 128, 0.24);
+    --mbl-fill-strong: rgba(118, 118, 128, 0.36);
+    --mbl-hairline: rgba(255, 255, 255, 0.10);
+    --mbl-hairline-soft: rgba(255, 255, 255, 0.045);
+    --mbl-label: #f5f5f7;
+    --mbl-label-secondary: #98989d;
+    --mbl-label-tertiary: #636366;
+    --mbl-accent: #0a84ff;
+    --mbl-accent-hover: #409cff;
+    --mbl-toolbar-bg: rgba(28, 28, 30, 0.78);
+    color-scheme: dark;
+  }
+
+  * {
+    border-color: var(--mbl-hairline);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--mbl-canvas);
+    color: var(--mbl-label);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
+  }
+}
+
+/* Native macOS vibrancy materials */
+.apple-toolbar {
+  background-color: var(--mbl-toolbar-bg);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
+.apple-sidebar {
+  background-color: var(--mbl-sidebar);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+  backdrop-filter: saturate(180%) blur(22px);
+}
+
+/* Subtle macOS keyboard shortcut cap */
+.apple-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 5px;
+  font-family: "SF Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--mbl-label-secondary);
+  background-color: var(--mbl-fill);
+  border: 0.5px solid var(--mbl-hairline);
+}
+
+/* Tabular numbers for clocks, ranges, streaks & durations */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Crisp Apple-style button primitives */
+.apple-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 9999px;
+  background-color: var(--mbl-accent);
+  color: #ffffff;
+  font-weight: 500;
+  transition: background-color 140ms ease, transform 120ms ease, opacity 140ms ease;
+}
+.apple-btn-primary:hover {
+  background-color: var(--mbl-accent-hover);
+}
+.apple-btn-primary:active {
+  transform: scale(0.985);
+}
+
+.apple-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 9999px;
+  background-color: var(--mbl-fill);
+  color: var(--mbl-label);
+  font-weight: 500;
+  transition: background-color 140ms ease, transform 120ms ease;
+}
+.apple-btn-secondary:hover {
+  background-color: var(--mbl-fill-strong);
+}
+.apple-btn-secondary:active {
+  transform: scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

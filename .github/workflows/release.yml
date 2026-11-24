@@ -1,0 +1,171 @@
+name: Release macOS app
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release without the leading "v" (e.g. 1.0.1). Defaults to the tag name.'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  APP_NAME: My Better Life
+  EXECUTABLE_NAME: MyBetterLifeMacApp
+  RESOURCE_BUNDLE: MyBetterLife_MyBetterLifeMacApp.bundle
+  BUNDLE_ID: com.igordonatti.mybetterlife
+
+jobs:
+  release:
+    name: Build, package & publish .dmg
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          RAW="${INPUT_VERSION:-}"
+          if [ -z "$RAW" ]; then
+            RAW="${GITHUB_REF_NAME}"
+          fi
+          VERSION="${RAW#v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Invalid version '$RAW'. Push a tag like v1.0.0 or pass a version input like 1.0.0."
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "TAG=v$VERSION" >> "$GITHUB_ENV"
+          echo "DMG_NAME=MyBetterLife-v$VERSION-macOS.dmg" >> "$GITHUB_ENV"
+          echo "Releasing version $VERSION (build $GITHUB_RUN_NUMBER)"
+
+      - name: Show toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+          swift --version
+
+      - name: Run tests
+        run: swift test
+
+      - name: Build release binary
+        run: swift build -c release
+
+      - name: Package .app bundle
+        run: |
+          set -euo pipefail
+          BIN_DIR="$(swift build -c release --show-bin-path)"
+          APP_DIR=".build/${APP_NAME}.app"
+          rm -rf "$APP_DIR"
+          mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
+
+          cp "$BIN_DIR/$EXECUTABLE_NAME" "$APP_DIR/Contents/MacOS/$EXECUTABLE_NAME"
+          cp "App/AppIcon.icns" "$APP_DIR/Contents/Resources/AppIcon.icns"
+          if [ -d "$BIN_DIR/$RESOURCE_BUNDLE" ]; then
+            cp -R "$BIN_DIR/$RESOURCE_BUNDLE" "$APP_DIR/Contents/Resources/"
+          fi
+
+          cat > "$APP_DIR/Contents/Info.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleDevelopmentRegion</key><string>pt-BR</string>
+            <key>CFBundleDisplayName</key><string>${APP_NAME}</string>
+            <key>CFBundleExecutable</key><string>${EXECUTABLE_NAME}</string>
+            <key>CFBundleIconFile</key><string>AppIcon</string>
+            <key>CFBundleIdentifier</key><string>${BUNDLE_ID}</string>
+            <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+            <key>CFBundleName</key><string>${APP_NAME}</string>
+            <key>CFBundlePackageType</key><string>APPL</string>
+            <key>CFBundleShortVersionString</key><string>${VERSION}</string>
+            <key>CFBundleVersion</key><string>${GITHUB_RUN_NUMBER}</string>
+            <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
+            <key>LSMinimumSystemVersion</key><string>15.0</string>
+            <key>NSHighResolutionCapable</key><true/>
+          </dict>
+          </plist>
+          PLIST
+          plutil -lint "$APP_DIR/Contents/Info.plist"
+
+      - name: Code sign (ad-hoc)
+        run: |
+          set -euo pipefail
+          APP_DIR=".build/${APP_NAME}.app"
+          # Ad-hoc signature: required for Apple Silicon. Users approve the first
+          # launch via System Settings → Privacy & Security → Open Anyway.
+          codesign --force --deep --sign - "$APP_DIR"
+          codesign --verify --deep --strict --verbose=2 "$APP_DIR"
+
+          # --- Future: Apple Developer ID signing (replace the ad-hoc step above) ---
+          # Requires repository secrets: MACOS_CERTIFICATE (base64 .p12),
+          # MACOS_CERTIFICATE_PASSWORD, MACOS_SIGNING_IDENTITY
+          # ("Developer ID Application: Name (TEAMID)") and a temporary keychain:
+          #
+          # echo "$MACOS_CERTIFICATE" | base64 --decode > certificate.p12
+          # security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          # security default-keychain -s build.keychain
+          # security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          # security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          # security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+          # codesign --force --deep --options runtime --timestamp \
+          #   --entitlements App/MyBetterLife.entitlements \
+          #   --sign "$MACOS_SIGNING_IDENTITY" "$APP_DIR"
+
+      - name: Build .dmg
+        run: |
+          set -euo pipefail
+          STAGING="$RUNNER_TEMP/dmg-staging"
+          rm -rf "$STAGING"
+          mkdir -p "$STAGING"
+          cp -R ".build/${APP_NAME}.app" "$STAGING/"
+          ln -s /Applications "$STAGING/Applications"
+
+          mkdir -p dist
+          hdiutil create \
+            -volname "${APP_NAME}" \
+            -srcfolder "$STAGING" \
+            -ov \
+            -format UDZO \
+            "dist/${DMG_NAME}"
+          hdiutil verify "dist/${DMG_NAME}"
+
+          # --- Future: notarize & staple the .dmg (after Developer ID signing) ---
+          # Requires secrets: APPLE_ID, APPLE_TEAM_ID, APPLE_APP_SPECIFIC_PASSWORD.
+          #
+          # codesign --force --timestamp --sign "$MACOS_SIGNING_IDENTITY" "dist/${DMG_NAME}"
+          # xcrun notarytool submit "dist/${DMG_NAME}" \
+          #   --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
+          #   --password "$APPLE_APP_SPECIFIC_PASSWORD" --wait
+          # xcrun stapler staple "dist/${DMG_NAME}"
+
+      - name: Generate checksums
+        working-directory: dist
+        run: |
+          shasum -a 256 "${DMG_NAME}" > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          target_commitish: ${{ github.sha }}
+          name: My Better Life ${{ env.TAG }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/${{ env.DMG_NAME }}
+            dist/SHA256SUMS.txt
