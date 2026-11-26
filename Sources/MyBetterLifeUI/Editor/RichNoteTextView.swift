@@ -32,6 +32,7 @@ public struct RichNoteEditorView: View {
     @State private var linkURLDraft: String = ""
     @State private var isDropTargeted: Bool = false
     @State private var expandedAttachment: BlockAttachment? = nil
+    @State private var pendingFormatCommand: PendingMarkdownFormat? = nil
 
     public init(
         markdown: Binding<String>,
@@ -87,6 +88,7 @@ public struct RichNoteEditorView: View {
                         LiveMarkdownMacTextView(
                             text: $markdown,
                             accentNSColor: NSColor(accentColor),
+                            pendingFormatCommand: $pendingFormatCommand,
                             onPasteImage: { imageData in
                                 onAttachImage(imageData, "imagem-\(Int(Date().timeIntervalSince1970)).png")
                             },
@@ -151,20 +153,26 @@ public struct RichNoteEditorView: View {
             if !isRenderedPreview {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 2) {
-                        toolbarButton(systemImage: "number", help: L10n.insertHeading) {
-                            appendBlockPrefix("## ")
+                        toolbarButton(systemImage: "number", help: "\(L10n.insertHeading) (⌘⇧H · ⌘⌥1–3)") {
+                            triggerFormat(.heading(level: nil))
                         }
-                        toolbarButton(systemImage: "bold", help: L10n.insertBold) {
-                            appendInlineSnippet("**texto**")
+                        toolbarButton(systemImage: "bold", help: "\(L10n.insertBold) (⌘B / ⌃B)") {
+                            triggerFormat(.bold)
                         }
-                        toolbarButton(systemImage: "italic", help: L10n.insertItalic) {
-                            appendInlineSnippet("*texto*")
+                        toolbarButton(systemImage: "italic", help: "\(L10n.insertItalic) (⌘I / ⌃I)") {
+                            triggerFormat(.italic)
                         }
-                        toolbarButton(systemImage: "checklist", help: L10n.insertChecklist) {
-                            appendBlockPrefix("- [ ] ")
+                        toolbarButton(systemImage: "strikethrough", help: "Tachado (⌘⇧X / ⌃⇧X)") {
+                            triggerFormat(.strikethrough)
                         }
-                        toolbarButton(systemImage: "list.bullet", help: "Lista") {
-                            appendBlockPrefix("- ")
+                        toolbarButton(systemImage: "chevron.left.forwardslash.chevron.right", help: "Código inline (⌘` / ⌘⇧C)") {
+                            triggerFormat(.inlineCode)
+                        }
+                        toolbarButton(systemImage: "checklist", help: "\(L10n.insertChecklist) (⌘L · ⌘↩ marcar)") {
+                            triggerFormat(.checklist)
+                        }
+                        toolbarButton(systemImage: "list.bullet", help: "Lista (⌘⇧8)") {
+                            triggerFormat(.bulletList)
                         }
 
                         Divider()
@@ -181,7 +189,7 @@ public struct RichNoteEditorView: View {
                         }
                         .buttonStyle(.plain)
                         .foregroundStyle(.secondary)
-                        .help(L10n.insertLink)
+                        .help("\(L10n.insertLink) (⌘⇧K)")
                         .popover(isPresented: $isLinkPopoverPresented) {
                             linkPopoverContent
                         }
@@ -543,6 +551,18 @@ public struct RichNoteEditorView: View {
 
     // MARK: - Helpers
 
+    private func triggerFormat(_ action: MarkdownFormatAction) {
+        #if os(macOS)
+        pendingFormatCommand = PendingMarkdownFormat(action: action)
+        #else
+        let ns = markdown as NSString
+        let result = MarkdownFormattingEngine.apply(action, to: markdown, selection: NSRange(location: ns.length, length: 0))
+        let mutable = NSMutableString(string: markdown)
+        mutable.replaceCharacters(in: result.replaceRange, with: result.replacement)
+        markdown = mutable as String
+        #endif
+    }
+
     private func appendBlockPrefix(_ prefix: String) {
         if markdown.isEmpty || markdown.hasSuffix("\n") {
             markdown += prefix
@@ -583,6 +603,11 @@ public struct RichNoteEditorView: View {
         }
         return handled
     }
+}
+
+private struct PendingMarkdownFormat: Equatable {
+    let id = UUID()
+    let action: MarkdownFormatAction
 }
 
 /// Full-size preview sheet when tapping an attached image.
@@ -638,6 +663,7 @@ private final class ConstrainedMarkdownScrollView: NSScrollView {
 private struct LiveMarkdownMacTextView: NSViewRepresentable {
     @Binding var text: String
     let accentNSColor: NSColor
+    @Binding var pendingFormatCommand: PendingMarkdownFormat?
     let onPasteImage: (Data) -> Void
     let onOpenURL: (URL) -> Void
 
@@ -721,11 +747,23 @@ private struct LiveMarkdownMacTextView: NSViewRepresentable {
         } else if accentChanged {
             textView.restyleMarkdown()
         }
+
+        if let command = pendingFormatCommand, context.coordinator.lastHandledFormatID != command.id {
+            context.coordinator.lastHandledFormatID = command.id
+            textView.window?.makeFirstResponder(textView)
+            textView.applyFormat(command.action)
+            DispatchQueue.main.async {
+                if pendingFormatCommand?.id == command.id {
+                    pendingFormatCommand = nil
+                }
+            }
+        }
     }
 
     final class Coordinator: NSObject, NSTextViewDelegate {
         var parent: LiveMarkdownMacTextView
         var isProgrammaticUpdate = false
+        var lastHandledFormatID: UUID? = nil
 
         init(_ parent: LiveMarkdownMacTextView) {
             self.parent = parent
@@ -789,6 +827,97 @@ private final class LiveMarkdownNSTextView: NSTextView {
         }
         // Always paste plain text so Markdown remains clean
         pasteAsPlainText(sender)
+    }
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if window?.firstResponder === self, let action = formattingAction(for: event) {
+            applyFormat(action)
+            return true
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+
+    override func keyDown(with event: NSEvent) {
+        // Intercept Control-based formatting shortcuts (e.g. ⌃B, ⌃I, ⌃⇧X, ⌃`, ⌃L)
+        // before NSTextView's default Emacs keybindings consume them.
+        if let action = formattingAction(for: event) {
+            applyFormat(action)
+            return
+        }
+        super.keyDown(with: event)
+    }
+
+    private func formattingAction(for event: NSEvent) -> MarkdownFormatAction? {
+        let mods = event.modifierFlags.intersection([.command, .control, .shift, .option])
+        let chars = event.charactersIgnoringModifiers?.lowercased() ?? ""
+
+        // Primary modifier: Command (macOS) OR Control (cross-platform muscle memory)
+        let isPrimary = (mods == .command || mods == .control)
+        let isPrimaryShift = (mods == [.command, .shift] || mods == [.control, .shift])
+
+        // ⌘↩ / ⌃↩: toggle checklist [ ] <-> [x] on current line
+        if isPrimary && (event.keyCode == 36 || event.keyCode == 76) {
+            return .toggleChecklistCheck
+        }
+
+        if isPrimary {
+            switch chars {
+            case "b":
+                return .bold
+            case "i":
+                return .italic
+            case "`":
+                return .inlineCode
+            case "l":
+                return .checklist
+            default:
+                break
+            }
+        }
+
+        if isPrimaryShift {
+            switch chars {
+            case "x", "s":
+                return .strikethrough
+            case "c":
+                return .inlineCode
+            case "l":
+                return .checklist
+            case "8", "*":
+                return .bulletList
+            case "h":
+                return .heading(level: nil)
+            case "k":
+                return .link
+            default:
+                break
+            }
+        }
+
+        // ⌘⌥1 / ⌘⌥2 / ⌘⌥3: explicit H1 / H2 / H3 heading levels
+        if mods == [.command, .option] {
+            switch chars {
+            case "1":
+                return .heading(level: 1)
+            case "2":
+                return .heading(level: 2)
+            case "3":
+                return .heading(level: 3)
+            default:
+                break
+            }
+        }
+
+        return nil
+    }
+
+    func applyFormat(_ action: MarkdownFormatAction) {
+        let result = MarkdownFormattingEngine.apply(action, to: string, selection: selectedRange())
+        if shouldChangeText(in: result.replaceRange, replacementString: result.replacement) {
+            textStorage?.replaceCharacters(in: result.replaceRange, with: result.replacement)
+            didChangeText()
+            setSelectedRange(result.newSelection)
+        }
     }
 
     override func insertNewline(_ sender: Any?) {
@@ -953,6 +1082,17 @@ private final class LiveMarkdownNSTextView: NSTextView {
         applyRegex(#"(?<!\*)(\*)([^\*\n]+)(\*)(?!\*)"#, in: fullText, storage: storage) { match in
             storage.addAttribute(.foregroundColor, value: mutedColor, range: match.range(at: 1))
             storage.addAttribute(.font, value: Self.italicFont, range: match.range(at: 2))
+            storage.addAttribute(.foregroundColor, value: mutedColor, range: match.range(at: 3))
+        }
+
+        // 4b. Inline Strikethrough: ~~text~~
+        applyRegex(#"(~~)([^~\n]+)(~~)"#, in: fullText, storage: storage) { match in
+            storage.addAttribute(.foregroundColor, value: mutedColor, range: match.range(at: 1))
+            storage.addAttributes([
+                .foregroundColor: secondaryColor,
+                .strikethroughStyle: NSUnderlineStyle.single.rawValue,
+                .strikethroughColor: secondaryColor
+            ], range: match.range(at: 2))
             storage.addAttribute(.foregroundColor, value: mutedColor, range: match.range(at: 3))
         }
 

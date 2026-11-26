@@ -2,6 +2,8 @@
 
 import React from 'react'
 import { CheckCircle2, Circle, Globe, Repeat, CheckSquare } from 'lucide-react'
+import { useAppContext } from '@/components/providers'
+import { MacTooltip } from '@/components/apple/MacTooltip'
 import { cn } from '@/lib/utils'
 
 export interface TimelineBlockCardProps {
@@ -42,6 +44,7 @@ export function TimelineBlockCard({
   onToggleComplete,
   className,
 }: TimelineBlockCardProps) {
+  const { locale } = useAppContext()
   const fillOpacity = isCompleted ? '14' : isSelected ? '33' : '21' // ~8% / 20% / 13%
   const borderColor = isSelected ? accentHex : `${accentHex}47` // 100% vs 28%
   const allChecked = checklist ? checklist.completed === checklist.total && checklist.total > 0 : false
@@ -89,22 +92,34 @@ export function TimelineBlockCard({
       {/* Row 1: Checkbox + Title + Glyphs */}
       <div className="flex items-center gap-1.5">
         {onToggleComplete ? (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              onToggleComplete()
-            }}
-            aria-label={isCompleted ? 'Mark incomplete' : 'Mark complete'}
-            className="shrink-0 transition-transform active:scale-90"
-            style={{ color: accentHex }}
+          <MacTooltip
+            label={
+              isCompleted
+                ? locale === 'pt'
+                  ? 'Marcar como pendente'
+                  : 'Mark as incomplete'
+                : locale === 'pt'
+                  ? 'Marcar como concluído'
+                  : 'Mark as completed'
+            }
           >
-            {isCompleted ? (
-              <CheckCircle2 className="h-[14px] w-[14px]" />
-            ) : (
-              <Circle className="h-[14px] w-[14px] opacity-85" />
-            )}
-          </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleComplete()
+              }}
+              aria-label={isCompleted ? 'Mark incomplete' : 'Mark complete'}
+              className="shrink-0 transition-transform active:scale-90"
+              style={{ color: accentHex }}
+            >
+              {isCompleted ? (
+                <CheckCircle2 className="h-[14px] w-[14px]" />
+              ) : (
+                <Circle className="h-[14px] w-[14px] opacity-85" />
+              )}
+            </button>
+          </MacTooltip>
         ) : (
           <span className="shrink-0" style={{ color: accentHex }}>
             {isCompleted ? (
@@ -125,16 +140,32 @@ export function TimelineBlockCard({
         </span>
 
         {isGlobal && (
-          <Globe
-            className="h-[11px] w-[11px] shrink-0"
-            style={{ color: accentHex }}
-          />
+          <MacTooltip
+            label={
+              locale === 'pt'
+                ? 'Bloco Global (notas compartilhadas)'
+                : 'Global Block (shared living notes)'
+            }
+          >
+            <Globe
+              className="h-[11px] w-[11px] shrink-0"
+              style={{ color: accentHex }}
+            />
+          </MacTooltip>
         )}
         {isRecurring && (
-          <Repeat
-            className="h-[10px] w-[10px] shrink-0 opacity-85"
-            style={{ color: accentHex }}
-          />
+          <MacTooltip
+            label={
+              locale === 'pt'
+                ? 'Bloco recorrente na semana'
+                : 'Recurring weekly series'
+            }
+          >
+            <Repeat
+              className="h-[10px] w-[10px] shrink-0 opacity-85"
+              style={{ color: accentHex }}
+            />
+          </MacTooltip>
         )}
       </div>
 

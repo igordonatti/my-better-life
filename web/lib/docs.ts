@@ -182,6 +182,20 @@ My Better Life is designed to feel effortless whether you prefer the mouse or ne
 | \`⌘⇧O\` | Pop out the active block or note into an independent floating window |
 | \`⌘E\` | Toggle live Markdown editor ↔ Formatted preview |
 
+## Note Formatting Shortcuts (Markdown Editor)
+
+| Shortcut | Formatting |
+| :--- | :--- |
+| \`⌘B\` / \`⌃B\` | **Bold** (\`**text**\`) — wraps selection or toggles off |
+| \`⌘I\` / \`⌃I\` | *Italic* (\`*text*\`) |
+| \`⌘⇧X\` / \`⌃⇧X\` | ~~Strikethrough~~ (\`~~text~~\`) |
+| \`⌘\\\`\` / \`⌘⇧C\` | \`Inline code\` |
+| \`⌘L\` / \`⌘⇧L\` | Toggle checklist line (\`- [ ] \`) |
+| \`⌘↩\` | Check / uncheck current checklist item (\`[ ]\` ↔ \`[x]\`) |
+| \`⌘⇧8\` | Toggle bullet list (\`- \`) |
+| \`⌘⇧H\` / \`⌘⌥1–3\` | Cycle headings or set H1 / H2 / H3 directly |
+| \`⌘⇧K\` | Insert Markdown link (\`[label](url)\`) |
+
 ## Two Days Side-by-Side
 
 Drag any date from the **Mini-Calendar** onto the Day Timeline (or click the split toolbar button) to plan two days side-by-side. You can even copy blocks from Monday and paste directly onto Tuesday!
@@ -218,6 +232,20 @@ O My Better Life foi construído para ser super rápido tanto no mouse quanto no
 | \`⌘W\` | Fechar a aba ativa do painel lateral direito (ou fechar uma janela destacada) |
 | \`⌘⇧O\` | Destacar o bloco ou nota atual em uma janela independente |
 | \`⌘E\` | Alternar entre edição Markdown ao vivo ↔ Visualização formatada |
+
+## Atalhos de Formatação nas Notas (Editor Markdown)
+
+| Atalho | Formatação |
+| :--- | :--- |
+| \`⌘B\` / \`⌃B\` | **Negrito** (\`**texto**\`) — envolve o texto selecionado ou remove o negrito |
+| \`⌘I\` / \`⌃I\` | *Itálico* (\`*texto*\`) |
+| \`⌘⇧X\` / \`⌃⇧X\` | ~~Tachado~~ (\`~~texto~~\`) |
+| \`⌘\\\`\` / \`⌘⇧C\` | \`Código inline\` |
+| \`⌘L\` / \`⌘⇧L\` | Alternar linha de checklist (\`- [ ] \`) |
+| \`⌘↩\` | Marcar / desmarcar item do checklist (\`[ ]\` ↔ \`[x]\`) |
+| \`⌘⇧8\` | Alternar lista com marcador (\`- \`) |
+| \`⌘⇧H\` / \`⌘⌥1–3\` | Alternar títulos ou aplicar H1 / H2 / H3 diretamente |
+| \`⌘⇧K\` | Inserir link Markdown (\`[texto](url)\`) |
 
 ## 2 Dias Lado a Lado
 

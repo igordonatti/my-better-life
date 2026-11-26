@@ -21,6 +21,7 @@ import {
   List,
 } from 'lucide-react'
 import { Header } from '@/components/Header'
+import { MacTooltip } from '@/components/apple/MacTooltip'
 import { useAppContext } from '@/components/providers'
 import { GITHUB_REPO_URL } from '@/lib/i18n'
 import type { ResolvedDocPage } from '@/lib/docs'
@@ -103,6 +104,7 @@ function docIconForSlug(slug: string): { icon: React.ReactNode; hex: string } {
 }
 
 function CopyablePre({ children, ...props }: React.ComponentPropsWithoutRef<'pre'>) {
+  const { locale } = useAppContext()
   const [copied, setCopied] = useState(false)
   const rawCode = getNodeText(children)
 
@@ -115,24 +117,39 @@ function CopyablePre({ children, ...props }: React.ComponentPropsWithoutRef<'pre
 
   return (
     <div className="group relative my-5 overflow-hidden rounded-[10px] border border-hairline bg-[#F5F5F7] text-[#1D1D1F] dark:bg-[#161618] dark:text-[#F5F5F7]">
-      <button
-        type="button"
-        onClick={handleCopy}
-        aria-label="Copy code"
-        className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-[6px] border border-hairline bg-canvas px-2 py-1 text-[11px] font-medium text-label-secondary shadow-apple-card transition-colors hover:text-label"
-      >
-        {copied ? (
-          <>
-            <Check className="h-3 w-3 text-[#10B981]" />
-            Copied
-          </>
-        ) : (
-          <>
-            <Copy className="h-3 w-3" />
-            Copy
-          </>
-        )}
-      </button>
+      <div className="absolute right-2.5 top-2.5">
+        <MacTooltip
+          side="top"
+          label={
+            copied
+              ? locale === 'pt'
+                ? 'Copiado!'
+                : 'Copied!'
+              : locale === 'pt'
+                ? 'Copiar bloco de código'
+                : 'Copy code snippet'
+          }
+        >
+          <button
+            type="button"
+            onClick={handleCopy}
+            aria-label="Copy code"
+            className="inline-flex items-center gap-1 rounded-[6px] border border-hairline bg-canvas px-2 py-1 text-[11px] font-medium text-label-secondary shadow-apple-card transition-colors hover:text-label"
+          >
+            {copied ? (
+              <>
+                <Check className="h-3 w-3 text-[#10B981]" />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy className="h-3 w-3" />
+                Copy
+              </>
+            )}
+          </button>
+        </MacTooltip>
+      </div>
       <pre
         {...props}
         className="!m-0 overflow-x-auto !bg-transparent px-4 py-3.5 pr-20 font-mono text-[13px] leading-[1.65] text-[#1D1D1F] dark:text-[#F5F5F7] [&_code]:!border-0 [&_code]:!bg-transparent [&_code]:!p-0 [&_code]:!text-inherit"
@@ -197,14 +214,22 @@ export function DocsShell({ docs, currentDoc }: DocsShellProps) {
             placeholder={locale === 'pt' ? 'Filtrar páginas...' : 'Filter pages...'}
             className="h-[30px] w-full rounded-[7px] bg-fill pl-8 pr-10 text-[12.5px] text-label placeholder:text-label-tertiary focus:outline-none focus:ring-2 focus:ring-accent/35"
           />
-          <button
-            type="button"
-            onClick={openPalette}
-            title="Command Palette (⌘K)"
-            className="apple-kbd absolute right-1.5 top-1/2 -translate-y-1/2"
-          >
-            ⌘K
-          </button>
+          <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+            <MacTooltip
+              side="bottom"
+              label={locale === 'pt' ? 'Abrir Command Palette' : 'Open Command Palette'}
+              shortcut="⌘K"
+            >
+              <button
+                type="button"
+                onClick={openPalette}
+                aria-label="Command Palette (⌘K)"
+                className="apple-kbd"
+              >
+                ⌘K
+              </button>
+            </MacTooltip>
+          </div>
         </div>
       </div>
 

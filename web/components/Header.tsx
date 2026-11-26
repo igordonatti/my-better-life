@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import { Search, Sun, Moon, Menu, X, Github, Download } from 'lucide-react'
 import { useAppContext } from '@/components/providers'
 import { SegmentedControl } from '@/components/apple/SegmentedControl'
+import { MacTooltip } from '@/components/apple/MacTooltip'
 import { useLatestRelease } from '@/components/DownloadCta'
 import { GITHUB_REPO_URL } from '@/lib/i18n'
 import type { LatestReleaseInfo } from '@/lib/releases'
@@ -77,54 +78,83 @@ export function Header({ fullWidth = false, release: releaseProp }: HeaderProps)
         {/* Right macOS Toolbar Controls */}
         <div className="hidden items-center gap-2 md:flex">
           {/* Native ⌘K Search Trigger */}
-          <button
-            type="button"
-            onClick={openPalette}
-            className="inline-flex h-[28px] items-center gap-2 rounded-[7px] bg-fill px-2.5 text-[12px] text-label-secondary transition-colors hover:bg-fill-strong hover:text-label"
-            aria-label={locale === 'pt' ? 'Abrir Command Palette (⌘K)' : 'Open Command Palette (⌘K)'}
+          <MacTooltip
+            side="bottom"
+            label={locale === 'pt' ? 'Abrir Command Palette' : 'Open Command Palette'}
+            shortcut="⌘K"
           >
-            <Search className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">
-              {locale === 'pt' ? 'Buscar' : 'Search'}
-            </span>
-            <span className="apple-kbd">⌘K</span>
-          </button>
+            <button
+              type="button"
+              onClick={openPalette}
+              className="inline-flex h-[28px] items-center gap-2 rounded-[7px] bg-fill px-2.5 text-[12px] text-label-secondary transition-colors hover:bg-fill-strong hover:text-label"
+              aria-label={locale === 'pt' ? 'Abrir Command Palette (⌘K)' : 'Open Command Palette (⌘K)'}
+            >
+              <Search className="h-3.5 w-3.5" />
+              <span className="hidden lg:inline">
+                {locale === 'pt' ? 'Buscar' : 'Search'}
+              </span>
+              <span className="apple-kbd">⌘K</span>
+            </button>
+          </MacTooltip>
 
           {/* Native macOS EN | PT Segmented Control */}
-          <SegmentedControl
-            size="xs"
-            ariaLabel="Language"
-            value={locale}
-            onChange={setLocale}
-            options={[
-              { value: 'en', label: 'EN' },
-              { value: 'pt', label: 'PT' },
-            ]}
-          />
+          <MacTooltip
+            side="bottom"
+            label={locale === 'pt' ? 'Alternar idioma (Inglês / Português)' : 'Switch language (English / Portuguese)'}
+          >
+            <SegmentedControl
+              size="xs"
+              ariaLabel="Language"
+              value={locale}
+              onChange={setLocale}
+              options={[
+                { value: 'en', label: 'EN' },
+                { value: 'pt', label: 'PT' },
+              ]}
+            />
+          </MacTooltip>
 
           {/* Appearance Toggle */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance'}
-            className="flex h-[28px] w-[28px] items-center justify-center rounded-[7px] text-label-secondary transition-colors hover:bg-fill hover:text-label"
+          <MacTooltip
+            side="bottom"
+            label={
+              theme === 'dark'
+                ? locale === 'pt'
+                  ? 'Mudar para modo claro'
+                  : 'Switch to light mode'
+                : locale === 'pt'
+                  ? 'Mudar para modo escuro'
+                  : 'Switch to dark mode'
+            }
           >
-            {theme === 'dark' ? (
-              <Sun className="h-[15px] w-[15px] text-mbl-amber" />
-            ) : (
-              <Moon className="h-[15px] w-[15px]" />
-            )}
-          </button>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance'}
+              className="flex h-[28px] w-[28px] items-center justify-center rounded-[7px] text-label-secondary transition-colors hover:bg-fill hover:text-label"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-[15px] w-[15px] text-mbl-amber" />
+              ) : (
+                <Moon className="h-[15px] w-[15px]" />
+              )}
+            </button>
+          </MacTooltip>
 
-          <a
-            href={GITHUB_REPO_URL}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="GitHub"
-            className="flex h-[28px] w-[28px] items-center justify-center rounded-[7px] text-label-secondary transition-colors hover:bg-fill hover:text-label"
+          <MacTooltip
+            side="bottom"
+            label={locale === 'pt' ? 'Abrir repositório no GitHub' : 'Open GitHub repository'}
           >
-            <Github className="h-[15px] w-[15px]" />
-          </a>
+            <a
+              href={GITHUB_REPO_URL}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GitHub"
+              className="flex h-[28px] w-[28px] items-center justify-center rounded-[7px] text-label-secondary transition-colors hover:bg-fill hover:text-label"
+            >
+              <Github className="h-[15px] w-[15px]" />
+            </a>
+          </MacTooltip>
 
           <a
             href={release.downloadUrl}

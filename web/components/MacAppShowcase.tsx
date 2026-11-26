@@ -32,6 +32,7 @@ import { useAppContext } from '@/components/providers'
 import { GatekeeperNote, useLatestRelease } from '@/components/DownloadCta'
 import { SegmentedControl } from '@/components/apple/SegmentedControl'
 import { TimelineBlockCard } from '@/components/apple/TimelineBlockCard'
+import { MacTooltip } from '@/components/apple/MacTooltip'
 import { GITHUB_REPO_URL } from '@/lib/i18n'
 import type { LatestReleaseInfo } from '@/lib/releases'
 import { cn } from '@/lib/utils'
@@ -323,58 +324,83 @@ export function MacAppShowcase({ release: releaseProp }: { release?: LatestRelea
           </p>
 
           <div className="flex flex-wrap items-center gap-2">
-            <SegmentedControl
-              size="sm"
-              ariaLabel="Day layout"
-              value={splitMode}
-              onChange={setSplitMode}
-              options={[
-                { value: 'one', label: locale === 'pt' ? '1 Dia' : '1 Day' },
-                {
-                  value: 'two',
-                  label: (
-                    <span className="inline-flex items-center gap-1">
-                      <Columns2 className="h-3.5 w-3.5" />
-                      {locale === 'pt' ? '2 Dias' : '2 Days'}
-                    </span>
-                  ),
-                },
-              ]}
-            />
-
-            <button
-              type="button"
-              onClick={() => setFocusActive((v) => !v)}
-              className={cn(
-                'inline-flex h-[28px] items-center gap-1.5 rounded-[7px] px-2.5 text-[12px] font-medium transition-colors',
-                focusActive
-                  ? 'bg-accent/12 text-accent'
-                  : 'bg-fill text-label-secondary hover:text-label'
-              )}
+            <MacTooltip
+              label={
+                locale === 'pt'
+                  ? 'Alternar entre 1 Dia ou 2 Dias lado a lado'
+                  : 'Switch between 1 Day or 2 Days side-by-side'
+              }
             >
-              <Timer className="h-3.5 w-3.5" />
-              {focusActive
-                ? locale === 'pt'
-                  ? 'Foco Ativo'
-                  : 'Focus On'
-                : locale === 'pt'
-                  ? 'Modo Foco'
-                  : 'Focus Mode'}
-            </button>
+              <SegmentedControl
+                size="sm"
+                ariaLabel="Day layout"
+                value={splitMode}
+                onChange={setSplitMode}
+                options={[
+                  { value: 'one', label: locale === 'pt' ? '1 Dia' : '1 Day' },
+                  {
+                    value: 'two',
+                    label: (
+                      <span className="inline-flex items-center gap-1">
+                        <Columns2 className="h-3.5 w-3.5" />
+                        {locale === 'pt' ? '2 Dias' : '2 Days'}
+                      </span>
+                    ),
+                  },
+                ]}
+              />
+            </MacTooltip>
 
-            <button
-              type="button"
-              onClick={() => setPoppedOut((v) => !v)}
-              className={cn(
-                'inline-flex h-[28px] items-center gap-1.5 rounded-[7px] px-2.5 text-[12px] font-medium transition-colors',
-                poppedOut
-                  ? 'bg-mbl-amber/15 text-mbl-amber'
-                  : 'bg-fill text-label-secondary hover:text-label'
-              )}
+            <MacTooltip
+              label={
+                locale === 'pt'
+                  ? 'Ativar ou encerrar cronômetro de Modo Foco'
+                  : 'Toggle Focus Mode countdown banner'
+              }
             >
-              <ArrowUpRight className="h-3.5 w-3.5" />
-              {locale === 'pt' ? 'Destacar Aba' : 'Pop-Out'}
-            </button>
+              <button
+                type="button"
+                onClick={() => setFocusActive((v) => !v)}
+                className={cn(
+                  'inline-flex h-[28px] items-center gap-1.5 rounded-[7px] px-2.5 text-[12px] font-medium transition-colors',
+                  focusActive
+                    ? 'bg-accent/12 text-accent'
+                    : 'bg-fill text-label-secondary hover:text-label'
+                )}
+              >
+                <Timer className="h-3.5 w-3.5" />
+                {focusActive
+                  ? locale === 'pt'
+                    ? 'Foco Ativo'
+                    : 'Focus On'
+                  : locale === 'pt'
+                    ? 'Modo Foco'
+                    : 'Focus Mode'}
+              </button>
+            </MacTooltip>
+
+            <MacTooltip
+              label={
+                locale === 'pt'
+                  ? 'Destacar nota em janela flutuante independente'
+                  : 'Pop out note into an independent floating window'
+              }
+              shortcut="⌘⇧O"
+            >
+              <button
+                type="button"
+                onClick={() => setPoppedOut((v) => !v)}
+                className={cn(
+                  'inline-flex h-[28px] items-center gap-1.5 rounded-[7px] px-2.5 text-[12px] font-medium transition-colors',
+                  poppedOut
+                    ? 'bg-mbl-amber/15 text-mbl-amber'
+                    : 'bg-fill text-label-secondary hover:text-label'
+                )}
+              >
+                <ArrowUpRight className="h-3.5 w-3.5" />
+                {locale === 'pt' ? 'Destacar Aba' : 'Pop-Out'}
+              </button>
+            </MacTooltip>
           </div>
         </div>
 
@@ -393,17 +419,26 @@ export function MacAppShowcase({ release: releaseProp }: { release?: LatestRelea
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={openPalette}
-                  className="inline-flex h-[26px] items-center gap-2 rounded-[6px] border border-hairline bg-canvas px-2.5 text-[11.5px] text-label-secondary transition-colors hover:text-label"
+                <MacTooltip
+                  label={
+                    locale === 'pt'
+                      ? 'Abrir Command Palette para buscar e navegar'
+                      : 'Open Command Palette to search and jump'
+                  }
+                  shortcut="⌘K"
                 >
-                  <Search className="h-3 w-3" />
-                  <span className="hidden sm:inline">
-                    {locale === 'pt' ? 'Command Palette...' : 'Command Palette...'}
-                  </span>
-                  <span className="apple-kbd">⌘K</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={openPalette}
+                    className="inline-flex h-[26px] items-center gap-2 rounded-[6px] border border-hairline bg-canvas px-2.5 text-[11.5px] text-label-secondary transition-colors hover:text-label"
+                  >
+                    <Search className="h-3 w-3" />
+                    <span className="hidden sm:inline">
+                      {locale === 'pt' ? 'Command Palette...' : 'Command Palette...'}
+                    </span>
+                    <span className="apple-kbd">⌘K</span>
+                  </button>
+                </MacTooltip>
               </div>
             </div>
 
@@ -434,43 +469,73 @@ export function MacAppShowcase({ release: releaseProp }: { release?: LatestRelea
                     {String(focusMinutes).padStart(2, '0')}:18
                   </span>
 
-                  <button
-                    type="button"
-                    onClick={() => setFocusPaused((p) => !p)}
-                    aria-label={focusPaused ? 'Resume' : 'Pause'}
-                    className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-fill text-label transition-colors hover:bg-fill-strong"
+                  <MacTooltip
+                    label={
+                      focusPaused
+                        ? locale === 'pt'
+                          ? 'Retomar cronômetro de foco'
+                          : 'Resume focus timer'
+                        : locale === 'pt'
+                          ? 'Pausar cronômetro de foco'
+                          : 'Pause focus timer'
+                    }
                   >
-                    {focusPaused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setFocusPaused((p) => !p)}
+                      aria-label={focusPaused ? 'Resume' : 'Pause'}
+                      className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-fill text-label transition-colors hover:bg-fill-strong"
+                    >
+                      {focusPaused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+                    </button>
+                  </MacTooltip>
 
-                  <button
-                    type="button"
-                    onClick={() => setFocusMinutes((m) => m + 15)}
-                    className="rounded-full bg-fill px-2.5 py-1 text-[11.5px] font-semibold text-label transition-colors hover:bg-fill-strong"
+                  <MacTooltip
+                    label={
+                      locale === 'pt'
+                        ? 'Estender bloco e timer em 15 minutos'
+                        : 'Extend block & timer by 15 minutes'
+                    }
                   >
-                    +15 min
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setFocusMinutes((m) => m + 15)}
+                      className="rounded-full bg-fill px-2.5 py-1 text-[11.5px] font-semibold text-label transition-colors hover:bg-fill-strong"
+                    >
+                      +15 min
+                    </button>
+                  </MacTooltip>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      toggleBlockDone(selectedBlock.id)
-                      setFocusActive(false)
-                    }}
-                    style={{ backgroundColor: selectedBlock.accentHex }}
-                    className="rounded-full px-2.5 py-1 text-[11.5px] font-semibold text-white transition-opacity hover:opacity-90"
+                  <MacTooltip
+                    label={
+                      locale === 'pt'
+                        ? 'Marcar bloco como concluído e encerrar foco'
+                        : 'Complete active block and finish focus'
+                    }
                   >
-                    {locale === 'pt' ? 'Concluir' : 'Done'}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        toggleBlockDone(selectedBlock.id)
+                        setFocusActive(false)
+                      }}
+                      style={{ backgroundColor: selectedBlock.accentHex }}
+                      className="rounded-full px-2.5 py-1 text-[11.5px] font-semibold text-white transition-opacity hover:opacity-90"
+                    >
+                      {locale === 'pt' ? 'Concluir' : 'Done'}
+                    </button>
+                  </MacTooltip>
 
-                  <button
-                    type="button"
-                    onClick={() => setFocusActive(false)}
-                    aria-label="Close focus banner"
-                    className="flex h-6 w-6 items-center justify-center rounded-full text-label-secondary hover:bg-fill"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
+                  <MacTooltip label={locale === 'pt' ? 'Encerrar Modo Foco' : 'Stop Focus Mode'}>
+                    <button
+                      type="button"
+                      onClick={() => setFocusActive(false)}
+                      aria-label="Close focus banner"
+                      className="flex h-6 w-6 items-center justify-center rounded-full text-label-secondary hover:bg-fill"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </MacTooltip>
                 </div>
               </div>
             )}
@@ -762,14 +827,27 @@ export function MacAppShowcase({ release: releaseProp }: { release?: LatestRelea
                     </span>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setPoppedOut((v) => !v)}
-                    title={locale === 'pt' ? 'Abrir em janela destacada (⌘⇧O)' : 'Pop out window (⌘⇧O)'}
-                    className="flex h-6 w-6 items-center justify-center rounded-[5px] text-label-secondary transition-colors hover:bg-fill hover:text-label"
+                  <MacTooltip
+                    label={
+                      locale === 'pt'
+                        ? 'Abrir em janela flutuante destacada'
+                        : 'Pop out into floating window'
+                    }
+                    shortcut="⌘⇧O"
                   >
-                    <ArrowUpRight className="h-3.5 w-3.5" />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setPoppedOut((v) => !v)}
+                      aria-label={
+                        locale === 'pt'
+                          ? 'Abrir em janela flutuante destacada'
+                          : 'Pop out into floating window'
+                      }
+                      className="flex h-6 w-6 items-center justify-center rounded-[5px] text-label-secondary transition-colors hover:bg-fill hover:text-label"
+                    >
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    </button>
+                  </MacTooltip>
                 </div>
 
                 {/* Inspector Body */}
@@ -924,12 +1002,17 @@ export function MacAppShowcase({ release: releaseProp }: { release?: LatestRelea
             <div className="mt-4 w-full overflow-hidden rounded-[12px] border border-hairline bg-canvas shadow-apple-popover lg:absolute lg:-bottom-6 lg:right-6 lg:mt-0 lg:w-[320px]">
               <div className="flex h-[34px] items-center justify-between border-b border-hairline bg-surface-secondary px-3">
                 <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setPoppedOut(false)}
-                    aria-label="Close detached window"
-                    className="h-2.5 w-2.5 rounded-full bg-[#FF5F56]"
-                  />
+                  <MacTooltip
+                    label={locale === 'pt' ? 'Fechar janela destacada' : 'Close detached window'}
+                    shortcut="⌘W"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setPoppedOut(false)}
+                      aria-label="Close detached window"
+                      className="h-2.5 w-2.5 rounded-full bg-[#FF5F56]"
+                    />
+                  </MacTooltip>
                   <span className="h-2.5 w-2.5 rounded-full bg-[#FFBD2E]" />
                   <span className="h-2.5 w-2.5 rounded-full bg-[#27C93F]" />
                   <span className="ml-2 text-[11px] font-medium text-label-secondary">
@@ -937,26 +1020,46 @@ export function MacAppShowcase({ release: releaseProp }: { release?: LatestRelea
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setPinnedOnTop((v) => !v)}
-                    className={cn(
-                      'inline-flex items-center gap-1 rounded-[5px] px-1.5 py-0.5 text-[10.5px] font-medium',
+                  <MacTooltip
+                    label={
                       pinnedOnTop
-                        ? 'bg-accent/15 text-accent'
-                        : 'text-label-secondary hover:bg-fill'
-                    )}
+                        ? locale === 'pt'
+                          ? 'Desafixar do topo da tela'
+                          : 'Unpin from always on top'
+                        : locale === 'pt'
+                          ? 'Fixar janela flutuando sempre no topo'
+                          : 'Pin window always on top'
+                    }
                   >
-                    <Pin className="h-2.5 w-2.5" />
-                    {locale === 'pt' ? 'Topo' : 'Pin'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPoppedOut(false)}
-                    className="rounded-[5px] bg-fill px-1.5 py-0.5 text-[10.5px] font-medium text-label hover:bg-fill-strong"
+                    <button
+                      type="button"
+                      onClick={() => setPinnedOnTop((v) => !v)}
+                      className={cn(
+                        'inline-flex items-center gap-1 rounded-[5px] px-1.5 py-0.5 text-[10.5px] font-medium',
+                        pinnedOnTop
+                          ? 'bg-accent/15 text-accent'
+                          : 'text-label-secondary hover:bg-fill'
+                      )}
+                    >
+                      <Pin className="h-2.5 w-2.5" />
+                      {locale === 'pt' ? 'Topo' : 'Pin'}
+                    </button>
+                  </MacTooltip>
+                  <MacTooltip
+                    label={
+                      locale === 'pt'
+                        ? 'Encaixar de volta na janela principal'
+                        : 'Dock back into the main app window'
+                    }
                   >
-                    {locale === 'pt' ? 'Encaixar' : 'Dock'}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setPoppedOut(false)}
+                      className="rounded-[5px] bg-fill px-1.5 py-0.5 text-[10.5px] font-medium text-label hover:bg-fill-strong"
+                    >
+                      {locale === 'pt' ? 'Encaixar' : 'Dock'}
+                    </button>
+                  </MacTooltip>
                 </div>
               </div>
               <div className="p-3.5">
