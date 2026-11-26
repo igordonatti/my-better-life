@@ -12,7 +12,6 @@ public enum PaletteQuickAction: String, CaseIterable, Identifiable, Sendable {
     case focusCurrentOrSelectedBlock
     case openAgenda
     case openNotes
-    case openInsights
     case openSettings
 
     public var id: String { rawValue }
@@ -29,7 +28,6 @@ public enum PaletteQuickAction: String, CaseIterable, Identifiable, Sendable {
         case .focusCurrentOrSelectedBlock: return "Iniciar Modo Foco no bloco atual"
         case .openAgenda: return "Ir para Agenda"
         case .openNotes: return "Ir para Notas"
-        case .openInsights: return "Abrir Insights"
         case .openSettings: return "Perfil & Configurações"
         }
     }
@@ -46,7 +44,6 @@ public enum PaletteQuickAction: String, CaseIterable, Identifiable, Sendable {
         case .focusCurrentOrSelectedBlock: return "Ativar timer de foco no bloco em andamento"
         case .openAgenda: return "Linha do tempo diária e semanal"
         case .openNotes: return "Notas avulsas e Blocos Globais"
-        case .openInsights: return "Tempo por Bloco Global, categorias e sequências"
         case .openSettings: return "Nome do perfil, versão e atualizações"
         }
     }
@@ -63,7 +60,6 @@ public enum PaletteQuickAction: String, CaseIterable, Identifiable, Sendable {
         case .focusCurrentOrSelectedBlock: return "timer"
         case .openAgenda: return "calendar"
         case .openNotes: return "doc.text"
-        case .openInsights: return "chart.bar.xaxis"
         case .openSettings: return "gearshape"
         }
     }
@@ -73,7 +69,6 @@ public enum PaletteQuickAction: String, CaseIterable, Identifiable, Sendable {
         case .newBlockNow: return "⌘N"
         case .openAgenda: return "⌘1"
         case .openNotes: return "⌘2"
-        case .openInsights: return "⌘3"
         default: return nil
         }
     }
@@ -90,7 +85,6 @@ public enum PaletteQuickAction: String, CaseIterable, Identifiable, Sendable {
         case .focusCurrentOrSelectedBlock: return ["foco", "focus", "pomodoro", "timer", "cronometro"]
         case .openAgenda: return ["agenda", "calendario", "timeline"]
         case .openNotes: return ["notas", "notes", "documentos"]
-        case .openInsights: return ["insights", "estatisticas", "relatorio", "horas", "grafico", "streak"]
         case .openSettings: return ["perfil", "configuracoes", "ajustes", "preferencias", "versao", "atualizacao", "update", "settings"]
         }
     }
@@ -175,7 +169,6 @@ public enum CommandPaletteEngine {
                 .goToToday,
                 .toggleSplitDay,
                 .newGlobalBlock,
-                .openInsights,
                 .openNotes,
                 .openSettings
             ]

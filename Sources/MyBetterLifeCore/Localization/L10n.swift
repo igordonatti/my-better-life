@@ -8,7 +8,6 @@ public enum L10n {
     // MARK: - Navigation & Views
     public static let agendaTab = String(localized: "nav.agenda", defaultValue: "Agenda")
     public static let notesTab = String(localized: "nav.notes", defaultValue: "Notas")
-    public static let insightsTab = String(localized: "nav.insights", defaultValue: "Insights")
     public static let today = String(localized: "nav.today", defaultValue: "Hoje")
     public static let dayView = String(localized: "nav.day", defaultValue: "Dia")
     public static let weekView = String(localized: "nav.week", defaultValue: "Semana")

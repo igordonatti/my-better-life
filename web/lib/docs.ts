@@ -170,7 +170,7 @@ My Better Life is designed to feel effortless whether you prefer the mouse or ne
 | Shortcut | Action |
 | :--- | :--- |
 | \`⌘K\` | Open **Command Palette** (jump to dates like \`"tomorrow"\`, \`"friday"\`, \`"25/11"\`, run actions, search notes) |
-| \`⌘1\` / \`⌘2\` / \`⌘3\` | Switch between **Agenda**, **Notes**, and **Insights** |
+| \`⌘1\` / \`⌘2\` | Switch between **Agenda** and **Notes** |
 | \`⌘N\` | Create a new time block at the current hour (or a new note in Notes) |
 | \`←\` / \`→\` | Step to the previous or next day (or week in Week view) |
 | \`⌘ + Click\` / \`⇧ + Click\` | Multi-select multiple blocks on the timeline |
@@ -221,7 +221,7 @@ O My Better Life foi construído para ser super rápido tanto no mouse quanto no
 | Atalho | Ação |
 | :--- | :--- |
 | \`⌘K\` | Abrir **Command Palette** (pular para datas como \`"amanhã"\`, \`"sexta"\`, \`"25/11"\`, ações rápidas e busca) |
-| \`⌘1\` / \`⌘2\` / \`⌘3\` | Alternar entre **Agenda**, **Notas** e **Insights** |
+| \`⌘1\` / \`⌘2\` | Alternar entre **Agenda** e **Notas** |
 | \`⌘N\` | Criar novo bloco no horário atual (ou nova nota em Notas) |
 | \`←\` / \`→\` | Avançar ou voltar um dia (ou semana na visão semanal) |
 | \`⌘ + Clique\` / \`⇧ + Clique\` | Selecionar múltiplos blocos na linha do tempo |
@@ -282,7 +282,7 @@ A **Global Block** is a single living Markdown document that you can schedule on
 
 - Example: Create a Global Block called **"SRE Studies"**.
 - Drag it from the sidebar onto Monday 09:00 and Wednesday 14:00.
-- Both timeline blocks open the **exact same living document**, and the **Insights** tab automatically tracks total hours invested in *"SRE Studies"*.
+- Both timeline blocks open the **exact same living document**, and every scheduled session is listed right inside the note's connections.
 
 ## Nested Parent-Child Subnotes (Notion-Style)
 
@@ -303,7 +303,7 @@ Um **Bloco Global** é um documento Markdown vivo único que você pode agendar 
 
 - Exemplo: crie um Bloco Global **"Estudos de SRE"**.
 - Arraste-o da barra lateral para Segunda às 09:00 e Quarta às 14:00.
-- Os dois blocos abrem o **mesmo documento vivo**, e a aba **Insights** contabiliza automaticamente quantas horas você dedicou a *"Estudos de SRE"*.
+- Os dois blocos abrem o **mesmo documento vivo**, e todas as sessões agendadas aparecem listadas diretamente nas conexões da nota.
 
 ## Subnotas Aninhadas (Estilo Notion)
 
@@ -334,7 +334,7 @@ My Better Life follows the **Obsidian open-core principle**: software that runs 
 - Offline-first **Core Data** storage and standard \`.md\` Markdown export/import
 - Time-Blocking, 2 Days Side-by-Side, Weekly View and Recurring Series
 - Global Blocks, multi-level Subnotes, \`[[wikilinks]]\` and Backlinks
-- Tear-off Pop-Out Windows, Focus Mode, Menu Bar, \`⌘K\` Palette, Insights & Streaks
+- Tear-off Pop-Out Windows, Focus Mode, Menu Bar & \`⌘K\` Command Palette
 - Automatic in-app update notifications via GitHub Releases
 
 No account is required, and no local feature will ever move behind a paywall.
@@ -361,7 +361,7 @@ O My Better Life segue o mesmo princípio **open-core do Obsidian**: tudo o que 
 - Armazenamento offline-first em **Core Data** + exportar/importar Markdown \`.md\`
 - Time-Blocking, 2 Dias Lado a Lado, Visão Semanal e Recorrência Inteligente
 - Blocos Globais, Subnotas Multi-Nível, \`[[wikilinks]]\` e Backlinks
-- Janelas Destacadas, Modo Foco, Barra de Menu, Command Palette \`⌘K\`, Insights e Sequências
+- Janelas Destacadas, Modo Foco, Barra de Menu e Command Palette \`⌘K\`
 - Avisos automáticos de atualização dentro do app via GitHub Releases
 
 Não é preciso criar conta, e nenhum recurso local vai para trás de um paywall.
@@ -419,7 +419,6 @@ The core library holds the app's logic as plain, testable Swift:
 - **Timeline & overlap layout** — positions time blocks and resolves overlapping blocks side by side.
 - **Recurrence** — expands recurring series and applies *only this day / this and future / entire series* edits.
 - **Second Brain** — Global Blocks, multi-level subnotes, \`[[wikilinks]]\`, backlinks and hierarchy moves.
-- **Insights** — hours per Global Block and category, plus habit streaks.
 - **Natural-language dates** — powers \`⌘K\` jumps such as *"tomorrow"*, *"friday"* or *"25/11"*.
 The SwiftUI layer (\`MyBetterLifeUI\`) observes these engines, persists through Core Data, and handles standard \`.md\` Markdown import/export, so the same logic drives both macOS and iOS.
 
@@ -467,7 +466,6 @@ A biblioteca core concentra a lógica do app em Swift simples e testável:
 - **Linha do tempo e sobreposição** — posiciona os blocos e organiza blocos sobrepostos lado a lado.
 - **Recorrência** — expande séries recorrentes e aplica edições *só este dia / este e futuros / toda a série*.
 - **Segundo Cérebro** — Blocos Globais, subnotas multi-nível, \`[[wikilinks]]\`, backlinks e reorganização da hierarquia.
-- **Insights** — horas por Bloco Global e categoria, além de sequências de hábitos.
 - **Datas em linguagem natural** — alimenta os saltos do \`⌘K\` como *"amanhã"*, *"sexta"* ou *"25/11"*.
 A camada SwiftUI (\`MyBetterLifeUI\`) observa essas engines, persiste via Core Data e cuida de importar/exportar Markdown \`.md\` padrão, então a mesma lógica roda no macOS e no iOS.
 

@@ -6,7 +6,6 @@ import Image from 'next/image'
 import {
   Calendar,
   FileText,
-  BarChart3,
   Inbox,
   Globe,
   Timer,
@@ -555,11 +554,6 @@ export function MacAppShowcase({ release: releaseProp }: { release?: LatestRelea
                     <FileText className="h-[15px] w-[15px]" />
                     <span>{locale === 'pt' ? 'Notas' : 'Notes'}</span>
                     <span className="ml-auto font-mono text-[10px] opacity-60">⌘2</span>
-                  </div>
-                  <div className="flex items-center gap-2 rounded-[7px] px-2.5 py-1.5 text-[13px] font-medium text-label-secondary">
-                    <BarChart3 className="h-[15px] w-[15px]" />
-                    <span>Insights</span>
-                    <span className="ml-auto font-mono text-[10px] opacity-60">⌘3</span>
                   </div>
                 </div>
 

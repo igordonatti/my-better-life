@@ -193,11 +193,11 @@ export const landingCopy: Record<Locale, LandingCopy> = {
           spanWide: true,
         },
         {
-          tag: 'Clarity',
-          title: 'Insights, Global Hours & Routine Streaks',
+          tag: 'Markdown',
+          title: 'Live Markdown Editor & Formatting Shortcuts',
           description:
-            'See exactly how many hours you invested in each Global Block and category across the week, month, or quarter — plus automatic streak tracking for recurring habits.',
-          shortcut: '⌘3',
+            'Write clean Markdown with instant live typography, click checkboxes directly in place, and format with ⌘B / ⌃B bold, ⌘I italic, ⌘L checklists, and ⌘↩ to toggle items without leaving the keyboard.',
+          shortcut: '⌘B · ⌘I · ⌘↩',
           accent: 'blue',
         },
         {
@@ -205,7 +205,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
           title: 'Instant ⌘K Command Palette & Smart Reminders',
           description:
             'Jump to natural-language dates ("tomorrow", "friday", "25/11"), launch Focus Mode, search notes, or capture Inbox items without lifting your hands. Native interactive notifications let you Focus, Snooze +15m, or Complete.',
-          shortcut: '⌘K · ⌘1–3',
+          shortcut: '⌘K · ⌘1–2',
           accent: 'gold',
         },
       ],
@@ -228,7 +228,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
           'Time-Blocking, 2-day split & weekly views',
           'Global Blocks, multi-level subnotes & [[wikilinks]]',
           'Tear-off pop-out windows, Focus Mode & Menu Bar',
-          'Insights dashboard, streaks & ⌘K Command Palette',
+          '⌘K Command Palette, smart reminders & Markdown shortcuts',
           '100% offline Core Data + Markdown .md export/import',
           'Automatic in-app update notifications',
         ],
@@ -302,7 +302,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
       items: [
         {
           q: 'Is the macOS and iOS app really free and open source?',
-          a: 'Yes. The full native app is released under the MIT license. Every local feature — Time-Blocking, 2-day split, Global Blocks, multi-level subnotes, pop-out windows, Focus Mode, Menu Bar and Insights — is free forever, and you never need an account to use it.',
+          a: 'Yes. The full native app is released under the MIT license. Every local feature — Time-Blocking, 2-day split, Global Blocks, multi-level subnotes, pop-out windows, Focus Mode, Menu Bar and ⌘K Command Palette — is free forever, and you never need an account to use it.',
         },
         {
           q: 'Where is my data stored? Does it work completely offline?',
@@ -433,11 +433,11 @@ export const landingCopy: Record<Locale, LandingCopy> = {
           spanWide: true,
         },
         {
-          tag: 'Clareza',
-          title: 'Insights, Horas por Bloco Global & Sequências',
+          tag: 'Markdown',
+          title: 'Editor Markdown ao Vivo & Atalhos de Formatação',
           description:
-            'Veja exatamente quantas horas você investiu em cada Bloco Global e categoria na semana, no mês ou nos últimos 90 dias — além de sequências (streaks) automáticas nas suas rotinas recorrentes.',
-          shortcut: '⌘3',
+            'Escreva em Markdown limpo com tipografia ao vivo, clique nos checkboxes direto no texto e formate com ⌘B / ⌃B negrito, ⌘I itálico, ⌘L checklist e ⌘↩ para marcar tarefas sem tirar a mão do teclado.',
+          shortcut: '⌘B · ⌘I · ⌘↩',
           accent: 'blue',
         },
         {
@@ -445,7 +445,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
           title: 'Command Palette ⌘K & Lembretes Inteligentes',
           description:
             'Pule para datas digitando "amanhã", "sexta" ou "25/11", inicie o Modo Foco ou capture na Inbox sem tirar a mão do teclado. Notificações nativas com ações diretas: Iniciar Foco, Adiar 15 min e Concluir.',
-          shortcut: '⌘K · ⌘1–3',
+          shortcut: '⌘K · ⌘1–2',
           accent: 'gold',
         },
       ],
@@ -468,7 +468,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
           'Time-Blocking, 2 dias lado a lado e visão semanal',
           'Blocos Globais, subnotas multi-nível e [[wikilinks]]',
           'Janelas destacadas, Modo Foco e Barra de Menu do Mac',
-          'Painel de Insights, sequências e Command Palette ⌘K',
+          'Command Palette ⌘K, lembretes nativos e atalhos Markdown',
           '100% offline (Core Data) + exportar/importar Markdown .md',
           'Avisos automáticos de atualização dentro do app',
         ],
@@ -542,7 +542,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
       items: [
         {
           q: 'O app para macOS e iOS é realmente grátis e open source?',
-          a: 'Sim. O app nativo completo é publicado sob a licença MIT. Todo recurso local — Time-Blocking, 2 dias lado a lado, Blocos Globais, subnotas multi-nível, janelas destacadas, Modo Foco, Barra de Menu e Insights — é grátis para sempre, e você não precisa criar conta para usar.',
+          a: 'Sim. O app nativo completo é publicado sob a licença MIT. Todo recurso local — Time-Blocking, 2 dias lado a lado, Blocos Globais, subnotas multi-nível, janelas destacadas, Modo Foco, Barra de Menu e Command Palette ⌘K — é grátis para sempre, e você não precisa criar conta para usar.',
         },
         {
           q: 'Onde meus dados ficam salvos? Funciona 100% offline?',

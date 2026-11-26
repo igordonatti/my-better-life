@@ -209,8 +209,6 @@ public struct MyBetterLifeRootView: View {
                         guard let item = allItems.first(where: { $0.id == noteID }) else { return false }
                         viewModel.deleteNoteItem(item, in: store)
                         return true
-                    case .insights:
-                        return false
                     }
                 },
                 onNavigateDay: { offset in
@@ -312,13 +310,6 @@ public struct MyBetterLifeRootView: View {
                             .frame(minWidth: 680, maxWidth: .infinity, maxHeight: .infinity)
                             .toolbar {
                                 notesToolbarContent
-                            }
-
-                    case .insights:
-                        InsightsWorkspaceView(store: store, viewModel: viewModel)
-                            .frame(minWidth: 680, maxWidth: .infinity, maxHeight: .infinity)
-                            .toolbar {
-                                insightsToolbarContent
                             }
                     }
                 }
@@ -579,16 +570,6 @@ public struct MyBetterLifeRootView: View {
                     Label(L10n.notesTab, systemImage: "doc.text")
                 }
                 .tag(AppSection.notes)
-
-            NavigationStack {
-                InsightsWorkspaceView(store: store, viewModel: viewModel)
-                    .navigationTitle(L10n.insightsTab)
-                    .navigationBarTitleDisplayMode(.inline)
-            }
-            .tabItem {
-                Label(L10n.insightsTab, systemImage: "chart.bar.xaxis")
-            }
-            .tag(AppSection.insights)
         }
         .sheet(isPresented: $isPhoneSidebarPresented) {
             NavigationStack {
@@ -826,7 +807,6 @@ public struct MyBetterLifeRootView: View {
         VStack(spacing: 4) {
             sectionRow(section: .agenda, shortcutKey: "1")
             sectionRow(section: .notes, shortcutKey: "2", badgeCount: store.notes.count)
-            sectionRow(section: .insights, shortcutKey: "3")
         }
     }
 
@@ -1328,18 +1308,6 @@ public struct MyBetterLifeRootView: View {
     }
 
     @ToolbarContentBuilder
-    private var insightsToolbarContent: some ToolbarContent {
-        ToolbarItemGroup(placement: .automatic) {
-            Button {
-                viewModel.isSearchPresented = true
-            } label: {
-                Image(systemName: "magnifyingglass")
-            }
-            .help("Command Palette (⌘K)")
-        }
-    }
-
-    @ToolbarContentBuilder
     private var notesToolbarContent: some ToolbarContent {
         ToolbarItemGroup(placement: .automatic) {
             Button {
@@ -1378,8 +1346,6 @@ public struct MyBetterLifeRootView: View {
             }
             openWindow(id: DetachedEditorTarget.windowID, value: DetachedEditorTarget.standaloneNote(uuid))
             return true
-        case .insights:
-            return false
         }
     }
     #endif
@@ -1469,8 +1435,6 @@ public struct MyBetterLifeRootView: View {
                 viewModel.selectedSection = .agenda
             case .openNotes:
                 viewModel.selectedSection = .notes
-            case .openInsights:
-                viewModel.selectedSection = .insights
             case .openSettings:
                 isProfileSettingsPresented = true
             }

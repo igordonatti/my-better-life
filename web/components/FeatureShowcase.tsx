@@ -8,7 +8,7 @@ import {
   Globe,
   RotateCcw,
   Trash2,
-  Flame,
+  Calendar,
   Search,
   Timer,
   Plus,
@@ -426,85 +426,117 @@ export function FeatureShowcase() {
         </div>
       </section>
 
-      {/* Band 4: Insights, Streaks & Live ⌘K Command Palette (Canvas) */}
+      {/* Band 4: Keyboard-First ⌘K Command Palette & Markdown Shortcuts (Canvas) */}
       <section className="border-t border-hairline bg-canvas py-20 sm:py-24">
         <div className="mx-auto grid max-w-[1080px] grid-cols-1 items-center gap-12 px-4 sm:px-6 lg:grid-cols-12">
           <div className="order-2 lg:order-1 lg:col-span-7">
-            <div className="rounded-[14px] border border-hairline bg-canvas p-5 shadow-apple-card">
-              <div className="flex items-center justify-between border-b border-hairline pb-3">
-                <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.04em] text-label-tertiary">
-                    {locale === 'pt' ? 'Insights · Últimos 7 dias' : 'Insights · Last 7 days'}
-                  </div>
-                  <div className="mt-0.5 tabular-nums text-[22px] font-semibold tracking-[-0.02em] text-label">
-                    36.5h{' '}
-                    <span className="text-[13px] font-normal text-label-secondary">
-                      {locale === 'pt' ? 'planejadas & concluídas' : 'planned & completed'}
-                    </span>
-                  </div>
-                </div>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-mbl-amber/15 px-3 py-1 text-[12px] font-semibold text-mbl-amber">
-                  <Flame className="h-3.5 w-3.5" />
-                  <span className="tabular-nums">
-                    14 {locale === 'pt' ? 'dias de sequência' : 'day streak'}
-                  </span>
-                </div>
+            <div className="overflow-hidden rounded-[14px] border border-hairline bg-canvas shadow-apple-card">
+              <div className="flex items-center gap-2.5 border-b border-hairline px-4 py-3 text-[13px] text-label-secondary">
+                <Search className="h-4 w-4 text-label-tertiary" />
+                <span className="text-label">
+                  {locale === 'pt' ? 'sexta' : 'friday'}
+                </span>
+                <span className="ml-auto apple-kbd">⌘K</span>
               </div>
 
-              {/* Apple Charts-style Horizontal Bars */}
-              <div className="mt-4 space-y-3.5">
+              <div className="space-y-1 p-2">
                 {[
                   {
-                    name: locale === 'pt' ? 'Produto & Engenharia' : 'Product & Engineering',
-                    hours: '18.0h',
-                    pct: '100%',
+                    icon: <Calendar className="h-3.5 w-3.5" />,
                     hex: '#3B82F6',
+                    active: true,
+                    title: locale === 'pt' ? 'Ir para Sexta-feira, 27 de Nov' : 'Jump to Friday, Nov 27',
+                    sub: locale === 'pt' ? 'Abrir na linha do tempo' : 'Open on the timeline',
+                    badge: '↵',
                   },
                   {
-                    name: locale === 'pt' ? 'Estudos de SRE (Global)' : 'SRE Studies (Global)',
-                    hours: '12.5h',
-                    pct: '69%',
+                    icon: <Globe className="h-3.5 w-3.5" />,
                     hex: '#F59E0B',
+                    active: false,
+                    title: locale === 'pt' ? 'Estudos de SRE' : 'SRE Studies',
+                    sub: locale === 'pt' ? 'Bloco Global · 2 subnotas' : 'Global Block · 2 subnotes',
+                    badge: '⌘2',
                   },
                   {
-                    name: locale === 'pt' ? 'Saúde & Corrida' : 'Health & Running',
-                    hours: '6.0h',
-                    pct: '34%',
+                    icon: <Timer className="h-3.5 w-3.5" />,
                     hex: '#10B981',
+                    active: false,
+                    title: locale === 'pt' ? 'Iniciar Modo Foco no bloco atual' : 'Start Focus Mode on active block',
+                    sub: locale === 'pt' ? 'Timer na Barra de Menu' : 'Live countdown in Menu Bar',
+                    badge: '⌘F',
                   },
                 ].map((row) => (
-                  <div key={row.name}>
-                    <div className="mb-1 flex items-center justify-between text-[12.5px]">
-                      <span className="font-medium text-label">{row.name}</span>
-                      <span className="tabular-nums font-semibold text-label-secondary">
-                        {row.hours}
-                      </span>
-                    </div>
-                    <div className="h-[7px] w-full overflow-hidden rounded-full bg-fill">
+                  <button
+                    key={row.title}
+                    type="button"
+                    onClick={openPalette}
+                    className={cn(
+                      'flex w-full items-center gap-3 rounded-[8px] px-3 py-2 text-left transition-colors',
+                      row.active ? 'bg-accent text-white' : 'text-label hover:bg-fill'
+                    )}
+                  >
+                    <span
+                      style={
+                        row.active
+                          ? undefined
+                          : { backgroundColor: `${row.hex}1A`, color: row.hex }
+                      }
+                      className={cn(
+                        'flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px]',
+                        row.active && 'bg-white/20 text-white'
+                      )}
+                    >
+                      {row.icon}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[13px] font-medium">{row.title}</div>
                       <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: row.pct, backgroundColor: row.hex }}
-                      />
+                        className={cn(
+                          'truncate text-[11.5px]',
+                          row.active ? 'text-white/80' : 'text-label-secondary'
+                        )}
+                      >
+                        {row.sub}
+                      </div>
                     </div>
-                  </div>
+                    <span
+                      className={cn(
+                        'font-mono text-[10.5px]',
+                        row.active ? 'text-white/85' : 'text-label-tertiary'
+                      )}
+                    >
+                      {row.badge}
+                    </span>
+                  </button>
                 ))}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 border-t border-hairline bg-surface-secondary/60 px-4 py-2.5 text-[11.5px] text-label-secondary">
+                <span className="apple-kbd">⌘B</span>
+                <span>{locale === 'pt' ? 'Negrito' : 'Bold'}</span>
+                <span className="apple-kbd ml-1">⌘I</span>
+                <span>{locale === 'pt' ? 'Itálico' : 'Italic'}</span>
+                <span className="apple-kbd ml-1">⌘L</span>
+                <span>Checklist</span>
+                <span className="apple-kbd ml-1">⌘↩</span>
+                <span>{locale === 'pt' ? 'Marcar item' : 'Toggle check'}</span>
               </div>
             </div>
           </div>
 
           <div className="order-1 lg:order-2 lg:col-span-5">
             <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-mbl-violet">
-              {locale === 'pt' ? 'Clareza & Velocidade' : 'Clarity & Speed'}
+              {locale === 'pt' ? 'Teclado Primeiro' : 'Keyboard First'}
             </p>
             <h2 className="mt-2 font-display text-[28px] font-semibold leading-[1.14] tracking-[-0.028em] text-label sm:text-[34px]">
               {locale === 'pt'
-                ? 'Veja onde seu tempo realmente vai. Navegue tudo com ⌘K.'
-                : 'See where your hours go. Jump anywhere with ⌘K.'}
+                ? 'Navegue tudo com ⌘K. Formate notas sem sair do teclado.'
+                : 'Jump anywhere with ⌘K. Format notes without touching the mouse.'}
             </h2>
             <p className="mt-4 text-[15.5px] leading-[1.6] text-label-secondary">
               {locale === 'pt'
-                ? 'Acompanhe horas investidas em cada Bloco Global e sequências nas suas rotinas recorrentes com Apple Charts. E use a Command Palette ⌘K para pular datas, buscar notas ou agir sem tirar as mãos do teclado.'
-                : 'Track hours invested across every Global Block and category with native Apple Charts — plus routine streaks. And jump to any date, note, or action via the ⌘K Command Palette.'}
+                ? 'Pule para qualquer data em linguagem natural ("amanhã", "sexta", "25/11"), busque Blocos Globais ou capture na Inbox via Command Palette. Nas notas, use ⌘B / ⌃B, ⌘I, ⌘L e ⌘↩ com Markdown ao vivo.'
+                : 'Jump to natural-language dates ("tomorrow", "friday", "25/11"), search Global Blocks, or capture Inbox tasks from the Command Palette. In notes, format live Markdown with ⌘B / ⌃B, ⌘I, ⌘L, and ⌘↩.'}
             </p>
 
             <button

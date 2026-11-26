@@ -8,7 +8,6 @@ import AppKit
 public enum AppSection: String, CaseIterable, Identifiable, Sendable {
     case agenda
     case notes
-    case insights
 
     public var id: String { rawValue }
 
@@ -16,7 +15,6 @@ public enum AppSection: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .agenda: return L10n.agendaTab
         case .notes: return L10n.notesTab
-        case .insights: return L10n.insightsTab
         }
     }
 
@@ -24,7 +22,6 @@ public enum AppSection: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .agenda: return "calendar"
         case .notes: return "doc.text"
-        case .insights: return "chart.bar.xaxis"
         }
     }
 }
