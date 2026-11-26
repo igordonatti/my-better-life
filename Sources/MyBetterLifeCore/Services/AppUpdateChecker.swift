@@ -103,6 +103,10 @@ public struct AppReleaseInfo: Equatable, Codable, Sendable, Identifiable {
     public let publishedAt: Date?
     /// `true` when `downloadURL` points at a downloadable asset rather than the release page.
     public let isDirectInstaller: Bool
+    /// Exact asset file name on GitHub Releases (e.g. `MyBetterLife-v1.1.0-macOS.dmg`).
+    public let assetName: String?
+    /// Optional `SHA256SUMS.txt` asset URL used to verify the downloaded installer before installing.
+    public let checksumURL: URL?
 
     public init(
         tagName: String,
@@ -112,7 +116,9 @@ public struct AppReleaseInfo: Equatable, Codable, Sendable, Identifiable {
         downloadURL: URL,
         releasePageURL: URL,
         publishedAt: Date?,
-        isDirectInstaller: Bool
+        isDirectInstaller: Bool,
+        assetName: String? = nil,
+        checksumURL: URL? = nil
     ) {
         self.tagName = tagName
         self.versionString = versionString
@@ -122,12 +128,14 @@ public struct AppReleaseInfo: Equatable, Codable, Sendable, Identifiable {
         self.releasePageURL = releasePageURL
         self.publishedAt = publishedAt
         self.isDirectInstaller = isDirectInstaller
+        self.assetName = assetName
+        self.checksumURL = checksumURL
     }
 
     public var semanticVersion: SemanticVersion? { SemanticVersion(versionString) }
 
     private enum CodingKeys: String, CodingKey {
-        case tagName, versionString, title, notes, downloadURL, releasePageURL, publishedAt, isDirectInstaller
+        case tagName, versionString, title, notes, downloadURL, releasePageURL, publishedAt, isDirectInstaller, assetName, checksumURL
     }
 }
 
@@ -172,6 +180,7 @@ struct GitHubReleasePayload: Decodable {
     func toReleaseInfo() -> AppReleaseInfo {
         let version = Self.stripVersionPrefix(tagName)
         let asset = Self.bestAsset(in: assets)
+        let checksumAsset = Self.checksumAsset(in: assets)
         let trimmedName = name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return AppReleaseInfo(
             tagName: tagName,
@@ -181,8 +190,17 @@ struct GitHubReleasePayload: Decodable {
             downloadURL: asset?.browserDownloadURL ?? htmlURL,
             releasePageURL: htmlURL,
             publishedAt: publishedAt,
-            isDirectInstaller: asset != nil
+            isDirectInstaller: asset != nil,
+            assetName: asset?.name,
+            checksumURL: checksumAsset?.browserDownloadURL
         )
+    }
+
+    static func checksumAsset(in assets: [Asset]) -> Asset? {
+        assets.first { asset in
+            let lower = asset.name.lowercased()
+            return lower == "sha256sums.txt" || lower.hasSuffix("sha256sums.txt") || lower.hasSuffix(".sha256")
+        }
     }
 
     static func stripVersionPrefix(_ tag: String) -> String {
