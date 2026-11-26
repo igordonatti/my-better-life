@@ -35,4 +35,6 @@ web/node_modules/
 web/.next/
 web/out/
 web/.vercel/
+web/.env.local
+web/.gitignore
 web/tsconfig.tsbuildinfo
