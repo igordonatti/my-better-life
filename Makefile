@@ -9,8 +9,8 @@ SWIFT := $(if $(filter 1,$(USE_XCODE)),swift,DEVELOPER_DIR=$(CLT_DIR) swift)
 
 # Release metadata injected into the packaged app's Info.plist (SemVer).
 # Example: make dmg VERSION=1.2.0 BUILD_NUMBER=7
-VERSION ?= 1.1.1
-BUILD_NUMBER ?= 3
+VERSION ?= 1.2.0
+BUILD_NUMBER ?= 4
 APP_CONFIG ?= release
 APP_NAME := My Better Life
 APP_DIR := .build/$(APP_NAME).app
