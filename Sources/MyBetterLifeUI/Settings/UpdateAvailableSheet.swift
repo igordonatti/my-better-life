@@ -22,6 +22,19 @@ struct UpdateAvailableSheet: View {
         #endif
     }
 
+    private var blocksDismissal: Bool {
+        #if os(macOS)
+        switch installer.state {
+        case .verifying, .installing:
+            return true
+        case .idle, .downloading, .relaunching, .failed:
+            return false
+        }
+        #else
+        return false
+        #endif
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -40,7 +53,7 @@ struct UpdateAvailableSheet: View {
         }
         #if os(macOS)
         .frame(width: 480, height: 560)
-        .interactiveDismissDisabled(isInstalling)
+        .interactiveDismissDisabled(blocksDismissal)
         #else
         .presentationDetents([.medium, .large])
         #endif
@@ -229,7 +242,20 @@ struct UpdateAvailableSheet: View {
             installStatusRow("Instalando My Better Life v\(release.versionString)…")
 
         case .relaunching:
-            installStatusRow("Reiniciando My Better Life…")
+            HStack(spacing: 10) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Reiniciando My Better Life…")
+                    .font(.callout.weight(.medium))
+                    .foregroundStyle(.primary)
+                Spacer()
+                Button("Encerrar agora") {
+                    exit(0)
+                }
+                .buttonStyle(.borderless)
+                .font(.caption.weight(.medium))
+            }
+            .padding(.vertical, 6)
 
         case .failed(let message):
             VStack(spacing: 8) {

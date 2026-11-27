@@ -243,11 +243,30 @@ public final class AppUpdateInstaller {
 
             // Short beat so the "Reiniciando…" label renders before termination.
             try? await Task.sleep(for: .milliseconds(250))
-            NSApp.terminate(nil)
+            Self.terminateCleanlyForRelaunch()
         } catch is CancellationError {
             state = .idle
         } catch {
             state = .failed(error.localizedDescription)
+        }
+    }
+
+    /// AppKit silently vetoes `NSApp.terminate(nil)` while any modal sheet is attached to a window.
+    /// Dismiss all sheets first, request normal termination, and guarantee exit with a short failsafe
+    /// so the detached swap helper can atomically replace and relaunch the `.app`.
+    private static func terminateCleanlyForRelaunch() {
+        for window in NSApp.windows {
+            for sheet in window.sheets {
+                window.endSheet(sheet)
+                sheet.orderOut(nil)
+            }
+        }
+        NSApp.terminate(nil)
+
+        // Failsafe: if SwiftUI/AppKit still vetoes termination, exit cleanly after 1s
+        // (Core Data saves synchronously on every edit, so no user data is lost).
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            exit(0)
         }
     }
 
@@ -387,12 +406,20 @@ public final class AppUpdateInstaller {
         BACKUP="$4"
         WORKDIR="$5"
 
-        # 1. Wait cleanly for current My Better Life process to finish saving Core Data and exit (up to 15s)
+        # 1. Wait cleanly for current My Better Life process to exit (up to 6s), then force-stop if wedged
         i=0
-        while kill -0 "$PID" 2>/dev/null && [ "$i" -lt 100 ]; do
+        while kill -0 "$PID" 2>/dev/null && [ "$i" -lt 40 ]; do
             sleep 0.15
             i=$((i + 1))
         done
+        if kill -0 "$PID" 2>/dev/null; then
+            kill -TERM "$PID" 2>/dev/null || true
+            sleep 1
+        fi
+        if kill -0 "$PID" 2>/dev/null; then
+            kill -KILL "$PID" 2>/dev/null || true
+            sleep 0.5
+        fi
 
         # 2. Atomic swap with automatic rollback if anything fails
         rm -rf "$BACKUP"
@@ -403,7 +430,7 @@ public final class AppUpdateInstaller {
         if mv "$STAGED" "$DEST"; then
             rm -rf "$BACKUP"
             rm -rf "$WORKDIR"
-            /usr/bin/open "$DEST"
+            /usr/bin/open -n "$DEST"
         else
             # Roll back so the user is never left without the app
             if [ -e "$BACKUP" ]; then
