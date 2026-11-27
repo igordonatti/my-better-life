@@ -36,6 +36,7 @@ public struct WeekdayMask: OptionSet, Codable, Sendable, Hashable {
     public static let saturday  = WeekdayMask(rawValue: 1 << 6) // Calendar weekday 7
 
     public static let weekdays: WeekdayMask = [.monday, .tuesday, .wednesday, .thursday, .friday]
+    public static let weekend: WeekdayMask = [.saturday, .sunday]
     public static let all: WeekdayMask = [.sunday, .monday, .tuesday, .wednesday, .thursday, .friday, .saturday]
 
     public static func from(calendarWeekday: Int) -> WeekdayMask {

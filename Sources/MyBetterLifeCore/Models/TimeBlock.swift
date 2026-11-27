@@ -15,6 +15,7 @@ public struct TimeBlock: Identifiable, Hashable, Sendable, Codable {
     public var categoryID: UUID?
     public var seriesID: UUID?
     public var globalNoteID: UUID?
+    public var routineItemID: UUID?
     public var occurrenceOriginalDate: Date?
     public var isDeletedOverride: Bool
     public var createdAt: Date
@@ -33,6 +34,7 @@ public struct TimeBlock: Identifiable, Hashable, Sendable, Codable {
         categoryID: UUID? = nil,
         seriesID: UUID? = nil,
         globalNoteID: UUID? = nil,
+        routineItemID: UUID? = nil,
         occurrenceOriginalDate: Date? = nil,
         isDeletedOverride: Bool = false,
         createdAt: Date = Date(),
@@ -51,6 +53,7 @@ public struct TimeBlock: Identifiable, Hashable, Sendable, Codable {
         self.categoryID = categoryID
         self.seriesID = seriesID
         self.globalNoteID = globalNoteID
+        self.routineItemID = routineItemID
         self.occurrenceOriginalDate = occurrenceOriginalDate
         self.isDeletedOverride = isDeletedOverride
         self.createdAt = createdAt

@@ -24,6 +24,7 @@ public struct MiniMonthCalendarView: View {
     @Binding public var displayedMonth: Date
     public let secondaryDate: Date?
     public let activeDays: Set<Date>
+    public let embedded: Bool
     public let onOpenSecondaryDate: ((Date) -> Void)?
 
     private let calendar: Calendar = {
@@ -41,12 +42,14 @@ public struct MiniMonthCalendarView: View {
         displayedMonth: Binding<Date>,
         secondaryDate: Date? = nil,
         activeDays: Set<Date>,
+        embedded: Bool = false,
         onOpenSecondaryDate: ((Date) -> Void)? = nil
     ) {
         self._selectedDate = selectedDate
         self._displayedMonth = displayedMonth
         self.secondaryDate = secondaryDate
         self.activeDays = activeDays
+        self.embedded = embedded
         self.onOpenSecondaryDate = onOpenSecondaryDate
     }
 
@@ -106,9 +109,14 @@ public struct MiniMonthCalendarView: View {
                 }
             }
         }
-        .padding(10)
+        .padding(embedded ? 0 : 10)
         .frame(maxWidth: .infinity)
-        .background(AppTheme.secondarySurface.opacity(0.65), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background {
+            if !embedded {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(AppTheme.secondarySurface.opacity(0.65))
+            }
+        }
     }
 
     private func dayCell(for day: Date) -> some View {

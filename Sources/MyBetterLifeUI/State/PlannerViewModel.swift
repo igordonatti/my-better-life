@@ -801,6 +801,20 @@ public final class PlannerViewModel {
         block.isCompleted.toggle()
         block.updatedAt = Date()
         store.upsertBlock(block)
+
+        if let routineItemID = block.routineItemID {
+            store.setRoutineCompletion(itemID: routineItemID, on: block.startDate, isCompleted: block.isCompleted)
+            let cal = Calendar.current
+            for var sibling in store.blocks where sibling.id != block.id
+                && sibling.routineItemID == routineItemID
+                && !sibling.isDeletedOverride
+                && cal.isDate(sibling.startDate, inSameDayAs: block.startDate)
+                && sibling.isCompleted != block.isCompleted {
+                sibling.isCompleted = block.isCompleted
+                sibling.updatedAt = Date()
+                store.upsertBlock(sibling)
+            }
+        }
     }
 
     public func updateNoteMarkdown(
@@ -2203,6 +2217,120 @@ public final class PlannerViewModel {
         doneItem.isCompleted = true
         doneItem.updatedAt = Date()
         store.upsertInboxItem(doneItem)
+
+        selectedSection = .agenda
+        viewMode = .day
+        openTab(.block(block.id))
+        return block
+    }
+
+    // MARK: - Daily Routine
+
+    @discardableResult
+    public func createRoutineItem(
+        title: String,
+        estimatedMinutes: Int = 30,
+        weekdaysMask: WeekdayMask = .all,
+        categoryID: UUID? = nil,
+        in store: PlannerStore
+    ) -> DailyRoutineItem? {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        let nextOrder = (store.routineItems.map(\.sortOrder).max() ?? -1) + 1
+        let item = DailyRoutineItem(
+            title: trimmed,
+            estimatedMinutes: estimatedMinutes,
+            weekdaysMask: weekdaysMask,
+            categoryID: categoryID ?? selectedCategoryFilterID,
+            sortOrder: nextOrder
+        )
+        store.upsertRoutineItem(item)
+        return item
+    }
+
+    public func renameRoutineItem(_ item: DailyRoutineItem, title: String, in store: PlannerStore) {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != item.title else { return }
+        var updated = item
+        updated.title = trimmed
+        updated.updatedAt = Date()
+        store.upsertRoutineItem(updated)
+    }
+
+    public func updateRoutineItemDuration(_ item: DailyRoutineItem, minutes: Int, in store: PlannerStore) {
+        var updated = item
+        updated.estimatedMinutes = max(15, minutes)
+        updated.updatedAt = Date()
+        store.upsertRoutineItem(updated)
+    }
+
+    public func updateRoutineItemWeekdays(_ item: DailyRoutineItem, mask: WeekdayMask, in store: PlannerStore) {
+        var updated = item
+        updated.weekdaysMask = mask.isEmpty ? .all : mask
+        updated.updatedAt = Date()
+        store.upsertRoutineItem(updated)
+    }
+
+    public func updateRoutineItemCategory(_ item: DailyRoutineItem, categoryID: UUID?, in store: PlannerStore) {
+        var updated = item
+        updated.categoryID = categoryID
+        updated.updatedAt = Date()
+        store.upsertRoutineItem(updated)
+    }
+
+    public func deleteRoutineItem(_ item: DailyRoutineItem, in store: PlannerStore) {
+        store.deleteRoutineItem(id: item.id)
+    }
+
+    /// Toggles completion of a daily routine item on `date` and syncs any linked `TimeBlock`s on that same day.
+    public func toggleRoutineCompletion(_ item: DailyRoutineItem, on date: Date, in store: PlannerStore) {
+        let nextState = store.toggleRoutineCompletion(itemID: item.id, on: date)
+        let cal = Calendar.current
+        for var block in store.blocks where block.routineItemID == item.id
+            && !block.isDeletedOverride
+            && cal.isDate(block.startDate, inSameDayAs: date)
+            && block.isCompleted != nextState {
+            block.isCompleted = nextState
+            block.updatedAt = Date()
+            store.upsertBlock(block)
+        }
+    }
+
+    /// Schedules a `DailyRoutineItem` as a `TimeBlock` on `day` without removing it from the Routine list,
+    /// keeping completion status bidirectionally synced for that day.
+    @discardableResult
+    public func scheduleRoutineItem(
+        _ item: DailyRoutineItem,
+        on day: Date,
+        startMinute: Int? = nil,
+        in store: PlannerStore
+    ) -> TimeBlock {
+        let dayStart = Calendar.current.startOfDay(for: day)
+        let duration = max(15, item.estimatedMinutes)
+        let resolvedStart: Int
+        if let startMinute {
+            resolvedStart = max(0, min(TimelineMath.minutesPerDay - duration, startMinute))
+        } else {
+            let comps = Calendar.current.dateComponents([.hour, .minute], from: Date())
+            let currentMin = (comps.hour ?? 9) * 60 + (comps.minute ?? 0)
+            resolvedStart = min(TimelineMath.snap(minute: Double(currentMin)), TimelineMath.minutesPerDay - duration)
+        }
+
+        let startDate = TimelineMath.date(on: dayStart, minuteOfDay: resolvedStart)
+        let endDate = TimelineMath.date(on: dayStart, minuteOfDay: resolvedStart + duration)
+        let alreadyDone = store.isRoutineCompleted(item.id, on: dayStart)
+
+        let block = TimeBlock(
+            title: item.title,
+            startDate: startDate,
+            endDate: endDate,
+            isAllDay: false,
+            isCompleted: alreadyDone,
+            reminderMinutesBefore: ReminderPreferences.defaultOption.minutesBefore,
+            categoryID: item.categoryID,
+            routineItemID: item.id
+        )
+        store.upsertBlock(block)
 
         selectedSection = .agenda
         viewMode = .day

@@ -10,6 +10,28 @@ public struct LocalSyncSnapshot: Sendable {
     public let notes: [StandaloneNote]
     public let attachments: [BlockAttachment]
     public let inboxItems: [InboxItem]
+    public let routineItems: [DailyRoutineItem]
+    public let routineCompletions: [DailyRoutineCompletion]
+
+    public init(
+        categories: [BlockCategory],
+        blocks: [TimeBlock],
+        series: [RecurrenceSeries],
+        notes: [StandaloneNote],
+        attachments: [BlockAttachment],
+        inboxItems: [InboxItem],
+        routineItems: [DailyRoutineItem] = [],
+        routineCompletions: [DailyRoutineCompletion] = []
+    ) {
+        self.categories = categories
+        self.blocks = blocks
+        self.series = series
+        self.notes = notes
+        self.attachments = attachments
+        self.inboxItems = inboxItems
+        self.routineItems = routineItems
+        self.routineCompletions = routineCompletions
+    }
 }
 
 /// Offline-first persistence store backed by Core Data (`NSPersistentContainer`).
@@ -26,6 +48,8 @@ public final class PlannerStore {
     public private(set) var notes: [StandaloneNote] = []
     public private(set) var attachments: [BlockAttachment] = []
     public private(set) var inboxItems: [InboxItem] = []
+    public private(set) var routineItems: [DailyRoutineItem] = []
+    public private(set) var routineCompletions: [DailyRoutineCompletion] = []
 
     /// Fired whenever a local user mutation persists to Core Data (NOT fired on remote sync merges).
     @ObservationIgnored
@@ -106,6 +130,21 @@ public final class PlannerStore {
         inboxItems.filter { !$0.isCompleted }
     }
 
+    public func routineItem(for id: UUID) -> DailyRoutineItem? {
+        routineItems.first(where: { $0.id == id })
+    }
+
+    /// Returns all active routine items applicable to `date`.
+    public func routineItems(for date: Date, calendar: Calendar = .current) -> [DailyRoutineItem] {
+        routineItems.filter { $0.applies(to: date, calendar: calendar) }
+    }
+
+    /// Returns true if the given routine item is marked completed on `date`.
+    public func isRoutineCompleted(_ itemID: UUID, on date: Date, calendar: Calendar = .current) -> Bool {
+        let key = DailyRoutineCompletion.dayKey(for: date, calendar: calendar)
+        return routineCompletions.first(where: { $0.routineItemID == itemID && $0.dayKey == key })?.isCompleted ?? false
+    }
+
     public func attachments(forBlockID blockID: UUID) -> [BlockAttachment] {
         attachments
             .filter { $0.blockID == blockID }
@@ -131,6 +170,8 @@ public final class PlannerStore {
         notes = fetchNotes(includeDeleted: false)
         attachments = fetchAttachments(includeDeleted: false)
         inboxItems = fetchInboxItems(includeDeleted: false)
+        routineItems = fetchRoutineItems(includeDeleted: false)
+        routineCompletions = fetchRoutineCompletions(includeDeleted: false)
     }
 
     // MARK: - Sync Snapshot & Remote LWW Merge
@@ -143,7 +184,9 @@ public final class PlannerStore {
             series: fetchSeries(includeDeleted: true),
             notes: fetchNotes(includeDeleted: true),
             attachments: fetchAttachments(includeDeleted: true),
-            inboxItems: fetchInboxItems(includeDeleted: true)
+            inboxItems: fetchInboxItems(includeDeleted: true),
+            routineItems: fetchRoutineItems(includeDeleted: true),
+            routineCompletions: fetchRoutineCompletions(includeDeleted: true)
         )
     }
 
@@ -155,7 +198,9 @@ public final class PlannerStore {
         series remoteSeries: [RecurrenceSeries] = [],
         notes remoteNotes: [StandaloneNote],
         attachments remoteAttachments: [BlockAttachment],
-        inboxItems remoteInboxItems: [InboxItem] = []
+        inboxItems remoteInboxItems: [InboxItem] = [],
+        routineItems remoteRoutineItems: [DailyRoutineItem] = [],
+        routineCompletions remoteRoutineCompletions: [DailyRoutineCompletion] = []
     ) {
         let localCats = Dictionary(uniqueKeysWithValues: fetchCategories(includeDeleted: true).map { ($0.id, $0) })
         for cat in remoteCategories {
@@ -210,6 +255,22 @@ public final class PlannerStore {
             writeInboxItemObject(item)
         }
 
+        let localRoutines = Dictionary(uniqueKeysWithValues: fetchRoutineItems(includeDeleted: true).map { ($0.id, $0) })
+        for item in remoteRoutineItems {
+            if let local = localRoutines[item.id], local.updatedAt > item.updatedAt {
+                continue
+            }
+            writeRoutineItemObject(item)
+        }
+
+        let localCompletions = Dictionary(uniqueKeysWithValues: fetchRoutineCompletions(includeDeleted: true).map { ($0.id, $0) })
+        for completion in remoteRoutineCompletions {
+            if let local = localCompletions[completion.id], local.updatedAt > completion.updatedAt {
+                continue
+            }
+            writeRoutineCompletionObject(completion)
+        }
+
         saveAndReload(notifyLocalMutation: false)
     }
 
@@ -255,6 +316,11 @@ public final class PlannerStore {
             item.categoryID = nil
             item.updatedAt = now
             writeInboxItemObject(item)
+        }
+        for var routine in routineItems where routine.categoryID == id {
+            routine.categoryID = nil
+            routine.updatedAt = now
+            writeRoutineItemObject(routine)
         }
         saveAndReload(notifyLocalMutation: true)
     }
@@ -395,6 +461,65 @@ public final class PlannerStore {
         saveAndReload(notifyLocalMutation: true)
     }
 
+    // MARK: - Daily Routine CRUD
+
+    public func upsertRoutineItem(_ item: DailyRoutineItem) {
+        var updated = item
+        updated.deletedAt = nil
+        writeRoutineItemObject(updated)
+        saveAndReload(notifyLocalMutation: true)
+    }
+
+    public func deleteRoutineItem(id: UUID) {
+        let now = Date()
+        if let obj = fetchObject(entityName: "CDDailyRoutineItem", id: id) {
+            obj.setValue(now, forKey: "deletedAt")
+            obj.setValue(now, forKey: "updatedAt")
+        }
+        saveAndReload(notifyLocalMutation: true)
+    }
+
+    /// Sets the completion state for a routine item on a specific local calendar day.
+    public func setRoutineCompletion(
+        itemID: UUID,
+        on date: Date,
+        isCompleted: Bool,
+        calendar: Calendar = .current
+    ) {
+        let key = DailyRoutineCompletion.dayKey(for: date, calendar: calendar)
+        let now = Date()
+        if var existing = routineCompletions.first(where: { $0.routineItemID == itemID && $0.dayKey == key }) {
+            guard existing.isCompleted != isCompleted else { return }
+            existing.isCompleted = isCompleted
+            existing.completedAt = isCompleted ? now : nil
+            existing.updatedAt = now
+            existing.deletedAt = nil
+            writeRoutineCompletionObject(existing)
+        } else {
+            let record = DailyRoutineCompletion(
+                routineItemID: itemID,
+                dayKey: key,
+                isCompleted: isCompleted,
+                completedAt: isCompleted ? now : nil,
+                updatedAt: now
+            )
+            writeRoutineCompletionObject(record)
+        }
+        saveAndReload(notifyLocalMutation: true)
+    }
+
+    /// Toggles the completion state for a routine item on `date` and returns the new completion value.
+    @discardableResult
+    public func toggleRoutineCompletion(
+        itemID: UUID,
+        on date: Date,
+        calendar: Calendar = .current
+    ) -> Bool {
+        let next = !isRoutineCompleted(itemID, on: date, calendar: calendar)
+        setRoutineCompletion(itemID: itemID, on: date, isCompleted: next, calendar: calendar)
+        return next
+    }
+
     // MARK: - Internal Core Data Writers
 
     private func writeCategoryObject(_ category: BlockCategory) {
@@ -425,6 +550,7 @@ public final class PlannerStore {
         obj.setValue(block.categoryID, forKey: "categoryID")
         obj.setValue(block.seriesID, forKey: "seriesID")
         obj.setValue(block.globalNoteID, forKey: "globalNoteID")
+        obj.setValue(block.routineItemID, forKey: "routineItemID")
         obj.setValue(block.occurrenceOriginalDate, forKey: "occurrenceOriginalDate")
         obj.setValue(block.isDeletedOverride, forKey: "isDeletedOverride")
         obj.setValue(block.createdAt, forKey: "createdAt")
@@ -501,6 +627,32 @@ public final class PlannerStore {
         obj.setValue(item.deletedAt, forKey: "deletedAt")
     }
 
+    private func writeRoutineItemObject(_ item: DailyRoutineItem) {
+        let obj = fetchObject(entityName: "CDDailyRoutineItem", id: item.id)
+            ?? NSEntityDescription.insertNewObject(forEntityName: "CDDailyRoutineItem", into: context)
+        obj.setValue(item.id, forKey: "id")
+        obj.setValue(item.title, forKey: "title")
+        obj.setValue(Int64(item.estimatedMinutes), forKey: "estimatedMinutes")
+        obj.setValue(Int64(item.weekdaysMask.rawValue), forKey: "weekdaysMaskRaw")
+        obj.setValue(item.categoryID, forKey: "categoryID")
+        obj.setValue(Int64(item.sortOrder), forKey: "sortOrder")
+        obj.setValue(item.createdAt, forKey: "createdAt")
+        obj.setValue(item.updatedAt, forKey: "updatedAt")
+        obj.setValue(item.deletedAt, forKey: "deletedAt")
+    }
+
+    private func writeRoutineCompletionObject(_ completion: DailyRoutineCompletion) {
+        let obj = fetchObject(entityName: "CDDailyRoutineCompletion", id: completion.id)
+            ?? NSEntityDescription.insertNewObject(forEntityName: "CDDailyRoutineCompletion", into: context)
+        obj.setValue(completion.id, forKey: "id")
+        obj.setValue(completion.routineItemID, forKey: "routineItemID")
+        obj.setValue(completion.dayKey, forKey: "dayKey")
+        obj.setValue(completion.isCompleted, forKey: "isCompleted")
+        obj.setValue(completion.completedAt, forKey: "completedAt")
+        obj.setValue(completion.updatedAt, forKey: "updatedAt")
+        obj.setValue(completion.deletedAt, forKey: "deletedAt")
+    }
+
     private func saveAndReload(notifyLocalMutation: Bool) {
         if context.hasChanges {
             try? context.save()
@@ -565,6 +717,7 @@ public final class PlannerStore {
                 categoryID: obj.value(forKey: "categoryID") as? UUID,
                 seriesID: obj.value(forKey: "seriesID") as? UUID,
                 globalNoteID: obj.value(forKey: "globalNoteID") as? UUID,
+                routineItemID: obj.value(forKey: "routineItemID") as? UUID,
                 occurrenceOriginalDate: obj.value(forKey: "occurrenceOriginalDate") as? Date,
                 isDeletedOverride: (obj.value(forKey: "isDeletedOverride") as? Bool) ?? false,
                 createdAt: (obj.value(forKey: "createdAt") as? Date) ?? Date(),
@@ -686,6 +839,58 @@ public final class PlannerStore {
         }
     }
 
+    private func fetchRoutineItems(includeDeleted: Bool) -> [DailyRoutineItem] {
+        let req = NSFetchRequest<NSManagedObject>(entityName: "CDDailyRoutineItem")
+        req.sortDescriptors = [
+            NSSortDescriptor(key: "sortOrder", ascending: true),
+            NSSortDescriptor(key: "createdAt", ascending: true)
+        ]
+        if !includeDeleted {
+            req.predicate = NSPredicate(format: "deletedAt == nil")
+        }
+        let objs = (try? context.fetch(req)) ?? []
+        return objs.compactMap { obj in
+            guard let id = obj.value(forKey: "id") as? UUID else { return nil }
+            let createdAt = (obj.value(forKey: "createdAt") as? Date) ?? Date()
+            let maskRaw = Int((obj.value(forKey: "weekdaysMaskRaw") as? Int64) ?? Int64(WeekdayMask.all.rawValue))
+            return DailyRoutineItem(
+                id: id,
+                title: (obj.value(forKey: "title") as? String) ?? "",
+                estimatedMinutes: Int((obj.value(forKey: "estimatedMinutes") as? Int64) ?? 30),
+                weekdaysMask: WeekdayMask(rawValue: maskRaw),
+                categoryID: obj.value(forKey: "categoryID") as? UUID,
+                sortOrder: Int((obj.value(forKey: "sortOrder") as? Int64) ?? 0),
+                createdAt: createdAt,
+                updatedAt: (obj.value(forKey: "updatedAt") as? Date) ?? createdAt,
+                deletedAt: obj.value(forKey: "deletedAt") as? Date
+            )
+        }
+    }
+
+    private func fetchRoutineCompletions(includeDeleted: Bool) -> [DailyRoutineCompletion] {
+        let req = NSFetchRequest<NSManagedObject>(entityName: "CDDailyRoutineCompletion")
+        req.sortDescriptors = [NSSortDescriptor(key: "updatedAt", ascending: false)]
+        if !includeDeleted {
+            req.predicate = NSPredicate(format: "deletedAt == nil")
+        }
+        let objs = (try? context.fetch(req)) ?? []
+        return objs.compactMap { obj in
+            guard let id = obj.value(forKey: "id") as? UUID,
+                  let routineItemID = obj.value(forKey: "routineItemID") as? UUID,
+                  let dayKey = obj.value(forKey: "dayKey") as? String else { return nil }
+            let updatedAt = (obj.value(forKey: "updatedAt") as? Date) ?? Date()
+            return DailyRoutineCompletion(
+                id: id,
+                routineItemID: routineItemID,
+                dayKey: dayKey,
+                isCompleted: (obj.value(forKey: "isCompleted") as? Bool) ?? false,
+                completedAt: obj.value(forKey: "completedAt") as? Date,
+                updatedAt: updatedAt,
+                deletedAt: obj.value(forKey: "deletedAt") as? Date
+            )
+        }
+    }
+
     // MARK: - Programmatic CloudKit & Sync-Compatible NSManagedObjectModel
 
     private static func buildManagedObjectModel() -> NSManagedObjectModel {
@@ -721,6 +926,7 @@ public final class PlannerStore {
             attr("categoryID", .UUIDAttributeType),
             attr("seriesID", .UUIDAttributeType),
             attr("globalNoteID", .UUIDAttributeType),
+            attr("routineItemID", .UUIDAttributeType),
             attr("occurrenceOriginalDate", .dateAttributeType),
             attr("isDeletedOverride", .booleanAttributeType, defaultValue: false),
             attr("createdAt", .dateAttributeType),
@@ -803,7 +1009,35 @@ public final class PlannerStore {
             attr("deletedAt", .dateAttributeType)
         ]
 
-        model.entities = [cat, block, series, note, attachment, inbox]
+        let routineItem = NSEntityDescription()
+        routineItem.name = "CDDailyRoutineItem"
+        routineItem.managedObjectClassName = NSStringFromClass(NSManagedObject.self)
+        routineItem.properties = [
+            attr("id", .UUIDAttributeType),
+            attr("title", .stringAttributeType, defaultValue: ""),
+            attr("estimatedMinutes", .integer64AttributeType, defaultValue: 30),
+            attr("weekdaysMaskRaw", .integer64AttributeType, defaultValue: Int64(WeekdayMask.all.rawValue)),
+            attr("categoryID", .UUIDAttributeType),
+            attr("sortOrder", .integer64AttributeType, defaultValue: 0),
+            attr("createdAt", .dateAttributeType),
+            attr("updatedAt", .dateAttributeType),
+            attr("deletedAt", .dateAttributeType)
+        ]
+
+        let routineCompletion = NSEntityDescription()
+        routineCompletion.name = "CDDailyRoutineCompletion"
+        routineCompletion.managedObjectClassName = NSStringFromClass(NSManagedObject.self)
+        routineCompletion.properties = [
+            attr("id", .UUIDAttributeType),
+            attr("routineItemID", .UUIDAttributeType),
+            attr("dayKey", .stringAttributeType, defaultValue: ""),
+            attr("isCompleted", .booleanAttributeType, defaultValue: false),
+            attr("completedAt", .dateAttributeType),
+            attr("updatedAt", .dateAttributeType),
+            attr("deletedAt", .dateAttributeType)
+        ]
+
+        model.entities = [cat, block, series, note, attachment, inbox, routineItem, routineCompletion]
         return model
     }
 

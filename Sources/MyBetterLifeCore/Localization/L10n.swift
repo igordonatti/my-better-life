@@ -12,9 +12,17 @@ public enum L10n {
     public static let dayView = String(localized: "nav.day", defaultValue: "Dia")
     public static let weekView = String(localized: "nav.week", defaultValue: "Semana")
 
-    // MARK: - Inbox, Focus & Command Palette
+    // MARK: - Inbox, Routine, Focus & Command Palette
     public static let inboxSectionTitle = String(localized: "sidebar.inbox", defaultValue: "Inbox")
     public static let inboxQuickAddPlaceholder = String(localized: "inbox.quick_add", defaultValue: "Capturar tarefa na Inbox…")
+    public static let routineTabTitle = String(localized: "sidebar.routine", defaultValue: "Rotina")
+    public static let routineQuickAddPlaceholder = String(localized: "routine.quick_add", defaultValue: "Adicionar item diário…")
+    public static let routineEmptyHint = String(localized: "routine.empty_hint", defaultValue: "Adicione hábitos e tarefas que você faz todo dia")
+    public static let routineAllDays = String(localized: "routine.days.all", defaultValue: "Todos os dias")
+    public static let routineWeekdays = String(localized: "routine.days.weekdays", defaultValue: "Dias úteis (Seg–Sex)")
+    public static let routineWeekend = String(localized: "routine.days.weekend", defaultValue: "Fins de semana (Sáb–Dom)")
+    public static let routineCustomDays = String(localized: "routine.days.custom", defaultValue: "Dias da semana")
+    public static let routineRename = String(localized: "routine.rename", defaultValue: "Renomear")
     public static let commandPalettePlaceholder = String(localized: "palette.placeholder", defaultValue: "Buscar, ir para uma data ou executar ação…")
     public static let focusModeTitle = String(localized: "focus.title", defaultValue: "Modo Foco")
     public static let startFocus = String(localized: "focus.start", defaultValue: "Iniciar Foco")

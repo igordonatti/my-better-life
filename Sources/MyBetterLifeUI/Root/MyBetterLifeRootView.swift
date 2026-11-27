@@ -667,8 +667,10 @@ public struct MyBetterLifeRootView: View {
                 .keyboardShortcut("k", modifiers: .command)
                 #endif
 
-                MiniMonthCalendarView(
-                    selectedDate: Binding(
+                SidebarCalendarRoutineCard(
+                    store: store,
+                    viewModel: viewModel,
+                    selectedDateBinding: Binding(
                         get: { viewModel.selectedDate },
                         set: { newDate in
                             viewModel.selectDate(newDate)
@@ -680,7 +682,6 @@ public struct MyBetterLifeRootView: View {
                             #endif
                         }
                     ),
-                    displayedMonth: $viewModel.displayedMonth,
                     secondaryDate: viewModel.selectedSection == .agenda && viewModel.viewMode == .day ? viewModel.secondaryDate : nil,
                     activeDays: activeMonthDays,
                     onOpenSecondaryDate: { droppedDay in
@@ -1190,6 +1191,9 @@ public struct MyBetterLifeRootView: View {
                     } else if let inboxID = InboxDragPayload.decode(str),
                               let inboxItem = store.inboxItem(for: inboxID) {
                         viewModel.scheduleInboxItem(inboxItem, on: targetDay, in: store)
+                    } else if let routineID = DailyRoutineDragPayload.decode(str),
+                              let routineItem = store.routineItem(for: routineID) {
+                        viewModel.scheduleRoutineItem(routineItem, on: targetDay, in: store)
                     } else if let globalNoteID = GlobalBlockDragPayload.decode(str),
                               let globalNote = store.note(for: globalNoteID) {
                         viewModel.scheduleGlobalBlock(globalNote, on: targetDay, in: store)
